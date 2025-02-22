@@ -6,34 +6,40 @@
     android:layout_height="match_parent">
 
 
-
     <LinearLayout
         android:id="@+id/llTextGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
+        android:layout_margin="15dp"
         android:orientation="horizontal"
-        tools:ignore="MissingConstraints">
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="15dp">
 
 
         <TextView
-            android:id="@+id/tvMainCategories"
+            android:id="@+id/tvForYou"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
+            android:layout_marginStart="10dp"
             android:layout_weight="1"
-            android:text="Trending"
+            android:text="For You"
+            android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
             android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/tvSeeAll"
+            android:id="@+id/tvFollowing"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="5dp"
-            android:text="See All"
-            android:textSize="16sp" />
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="Following"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textSize="18sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -47,7 +53,7 @@
         app:layout_constraintStart_toStartOf="@id/llTextGroup"
         app:layout_constraintTop_toBottomOf="@id/llTextGroup"
         app:layout_constraintVertical_bias="1.0"
-        tools:listitem="@layout/postfeedmain_item" />
+        tools:listitem="@layout/item_post" />
 
 
     <com.google.android.material.bottomnavigation.BottomNavigationView

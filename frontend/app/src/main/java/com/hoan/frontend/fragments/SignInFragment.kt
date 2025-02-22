@@ -9,8 +9,8 @@ import androidx.navigation.Navigation
 import com.google.gson.Gson
 import com.hoan.frontend.R
 import com.hoan.frontend.databinding.FragmentSigninBinding
-import com.hoan.frontend.models.dto.request.LoginRequest
-import com.hoan.frontend.models.dto.response.LoginResponse
+import com.hoan.frontend.models.dto.auth.request.LoginRequest
+import com.hoan.frontend.models.dto.auth.response.LoginResponse
 import com.hoan.frontend.utils.Extensions.toast
 import com.hoan.frontend.utils.RetrofitClient
 import kotlinx.coroutines.Dispatchers
@@ -24,8 +24,6 @@ class SignInFragment : Fragment(R.layout.fragment_signin) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentSigninBinding.bind(view)
-
-        // Nếu bạn có logic kiểm tra đã đăng nhập trước (ví dụ: kiểm tra token lưu sẵn), hãy thực hiện ở đây
 
         binding.btnSignIn.setOnClickListener {
             val email = binding.etEmailSignIn.text.toString().trim()
@@ -48,7 +46,7 @@ class SignInFragment : Fragment(R.layout.fragment_signin) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val loginRequest = LoginRequest(usernameOrEmail = email, password = password)
-                val response = RetrofitClient.apiService.login(loginRequest)
+                val response = RetrofitClient.authService.login(loginRequest)
                 if (response.isSuccessful) {
                     val loginResponse: LoginResponse? = response.body()
                     val sharedPref = requireContext().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)

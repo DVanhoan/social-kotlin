@@ -1,4 +1,4 @@
-package com.hoan.frontend.models.dto.response
+package com.hoan.frontend.models.dto.auth.response
 
 import com.hoan.frontend.models.entities.User
 

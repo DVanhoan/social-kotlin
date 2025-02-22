@@ -7,7 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import com.hoan.frontend.R
 import com.hoan.frontend.databinding.FragmentSignupBinding
-import com.hoan.frontend.models.dto.request.RegisterRequest
+import com.hoan.frontend.models.dto.auth.request.RegisterRequest
 import com.hoan.frontend.utils.RetrofitClient
 import com.hoan.frontend.utils.Extensions.toast
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,7 @@ class SignUpFragment : Fragment(R.layout.fragment_signup) {
 
         binding.btnSignUp.setOnClickListener {
             val name = binding.etNameSignUp.text.toString().trim()
-            val username = binding.etUserNameSignUp.text.toString().trim()  // EditText cho username
+            val username = binding.etUserNameSignUp.text.toString().trim()
             val email = binding.etEmailSignUp.text.toString().trim()
             val password = binding.etPasswordSignUp.text.toString().trim()
 
@@ -49,7 +49,7 @@ class SignUpFragment : Fragment(R.layout.fragment_signup) {
                     email = email,
                     password = password
                 )
-                val response = RetrofitClient.apiService.register(registerRequest)
+                val response = RetrofitClient.authService.register(registerRequest)
                 if (response.isSuccessful) {
                     withContext(Dispatchers.Main) {
                         requireActivity().toast("Đăng ký thành công")

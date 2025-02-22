@@ -1,4 +1,4 @@
-package com.hoan.frontend.models.dto.request
+package com.hoan.frontend.models.dto.auth.request
 
 data class RegisterRequest(
     val name: String,

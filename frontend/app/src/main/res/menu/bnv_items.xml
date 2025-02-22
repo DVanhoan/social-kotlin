@@ -14,10 +14,10 @@
         android:title="LikePage" />
 
     <item
-        android:id="@+id/cartFragment"
+        android:id="@+id/notificationFragment"
         android:enabled="true"
-        android:icon="@drawable/ic_baseline_shopping_cart_24"
-        android:title="CartPage" />
+        android:icon="@drawable/bell"
+        android:title="NotificationPage" />
 
     <item
         android:id="@+id/profileFragment"

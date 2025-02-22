@@ -6,7 +6,6 @@ use App\Http\Requests\LoginRequest;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,9 +23,9 @@ class UserController extends Controller
             $body = $request->all();
             $body['password'] = Hash::make($body['password']);
 
-            $user = User::create($body);
+            User::create($body);
 
-            return response()->json($user, 201);
+            return response()->json(['message' => 'User created successfully'], 201);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error during registration', 'error' => $e->getMessage()], 500);
         }
@@ -65,7 +64,7 @@ class UserController extends Controller
             return response()->json([
                 'token' => $token,
                 'user' => auth('api')->user(),
-            ]);
+            ], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error during token refresh', 'error' => $e->getMessage()], 500);
         }
