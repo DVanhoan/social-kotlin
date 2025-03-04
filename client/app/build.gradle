@@ -1,0 +1,77 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    id 'com.google.devtools.ksp'
+    id 'com.google.gms.google-services'
+}
+
+android {
+    namespace 'com.hoan.client'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.hoan.client"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.appcompat
+    implementation libs.material
+    implementation libs.androidx.activity
+    implementation libs.androidx.constraintlayout
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+    // Retrofit
+    implementation libs.retrofit
+    implementation libs.okhttp
+    implementation libs.moshi.kotlin
+    implementation libs.converter.moshi
+    // Room
+    implementation libs.androidx.room.runtime
+    implementation libs.androidx.room.ktx
+    ksp libs.androidx.room.compiler
+    // Pretty time
+    implementation libs.prettytime
+    // Glide
+    implementation libs.glide
+    annotationProcessor libs.compiler
+    // ImagePicker
+    implementation libs.imagepicker
+    // Location
+    implementation libs.play.services.location
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:29.3.1')
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    // Firebase messaging for push notifications
+    implementation 'com.google.firebase:firebase-messaging-ktx:23.1.0'
+
+    implementation libs.circleimageview
+    implementation libs.custom.snackbar
+    implementation libs.picasso
+}

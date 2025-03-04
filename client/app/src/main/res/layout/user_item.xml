@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/user_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="1dp"
+    android:background="@color/black">
+
+    <!-- Container hiển thị nội dung chính -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/foregroundContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/black"
+        tools:ignore="MissingConstraints">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/civ_profile_picture"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_margin="10dp"
+            android:src="@drawable/profile_placeholder"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_full_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="70dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/full_name_lorem"
+            android:textColor="@color/light_grey"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/civ_profile_picture"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="70dp"
+            android:layout_marginTop="5dp"
+            android:text="@string/username_lorem"
+            android:textColor="@color/medium_grey"
+            android:textSize="12sp"
+            app:layout_constraintStart_toEndOf="@id/civ_profile_picture"
+            app:layout_constraintTop_toBottomOf="@id/tv_full_name" />
+
+        <!-- Nút hành động: dùng cho các trường hợp USER hoặc PENDING -->
+        <Button
+            android:id="@+id/confirm_add_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:backgroundTint="@color/light_blue"
+            android:text="@string/add"
+            android:textColor="@color/primary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Nút hành động: dùng cho trường hợp FRIEND (xóa bạn) -->
+        <ImageButton
+            android:id="@+id/remove_friend_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:backgroundTint="@color/transparent"
+            android:contentDescription="@string/remove_friend_button"
+            android:src="@drawable/ic_minus_svgrepo_com"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/confirm_add_button" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
