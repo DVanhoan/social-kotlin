@@ -11,19 +11,23 @@ class Post extends Model
 
     protected $fillable = [
         'user_id',
-        'username',
         'main_photo',
-        'selfie_photo',
-        'description',
+        'content',
         'location',
         'posting_time',
         'deleted'
     ];
 
+    protected $casts = [
+        'deleted' => 'boolean',
+        'posting_time' => 'datetime:Y-m-d H:i:s',
+    ];
+
+
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
 
@@ -37,4 +41,10 @@ class Post extends Model
     {
         return $this->hasMany(Reaction::class);
     }
+
+    public function getDeletedAttribute($value)
+    {
+        return (bool) $value;
+    }
+
 }

@@ -27,10 +27,11 @@
                 android:id="@+id/back_button"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_centerVertical="true"
+                android:layout_marginLeft="30px"
                 android:layout_marginVertical="15dp"
                 android:contentDescription="@string/left_arrow_button"
-                android:src="@drawable/ic_arrow_left_solid" />
+                android:src="@drawable/ic_arrow_left_solid"
+                tools:ignore="PxUsage" />
 
             <TextView
                 android:layout_width="wrap_content"

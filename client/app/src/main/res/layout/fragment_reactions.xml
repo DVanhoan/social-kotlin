@@ -30,6 +30,7 @@
                 android:layout_height="match_parent"
                 android:layout_centerVertical="true"
                 android:layout_marginVertical="15dp"
+                android:layout_marginLeft="30px"
                 android:contentDescription="@string/left_arrow_button"
                 android:src="@drawable/ic_arrow_left_solid" />
 

@@ -4,7 +4,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.hoan.client.database.repository.CacheService
+import com.bumptech.glide.Glide
 import com.hoan.client.databinding.CommentItemBinding
 import com.hoan.client.network.response.CommentResponse
 
@@ -30,10 +30,14 @@ class CommentsRecyclerViewAdapter : RecyclerView.Adapter<CommentsRecyclerViewAda
         RecyclerView.ViewHolder(binding.root) {
         fun bind(position: Int) {
             val comment = commentList[position]
-            binding.commenterName.text = comment.username
+            binding.commenterName.text = comment.user?.username
             binding.commentText.text = comment.text
             binding.lateTime.text = comment.commentTime
-            CacheService.cacheProfilePicture(comment.userId, binding.commenterProfilePicture)
+
+            Glide.with(binding.commenterProfilePicture)
+                .load(comment.user?.profilePicture)
+                .placeholder(android.R.color.holo_blue_light)
+                .into(binding.commenterProfilePicture)
         }
     }
 

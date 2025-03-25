@@ -19,19 +19,19 @@ interface UserService {
     @GET("users/user/me")
     fun getUser(): Call<UserResponse>
 
-    @PATCH("users/user")
+    @POST("users/user")
     fun editUser(@Body userRequest: UserRequest): Call<UserResponse>
 
     @GET("users/user/list")
     fun loadUserList(): Call<List<UserResponse>>
 
-    @GET("user/user-by-userId/{userId}")
+    @GET("users/user/user-by-userId/{userId}")
     fun getUserByUserId(@Path("userId") userId: Long): Call<UserResponse>
 
     @Multipart
-    @PATCH("user/upload-profile-picture")
+    @POST("users/user/upload-profile-picture")
     fun uploadProfilePicture(@Part picture: MultipartBody.Part): Call<UserResponse>
 
-    @GET("user/profile-picture/{userId}")
+    @GET("users/user/profile-picture/{userId}")
     fun getProfilePictureUrl(@Path("userId") userId: Long): Call<ResponseBody>
 }

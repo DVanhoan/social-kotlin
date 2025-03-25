@@ -15,4 +15,6 @@
     <color name="yellow">#B4FFEB3B</color>
     <color name="divider">#800D1117</color>
     <color name="transparent">#00000000</color>
+    <color name="green">#0AAB50</color>
+    <color name="lightGray">#F5F5F5</color>
 </resources>

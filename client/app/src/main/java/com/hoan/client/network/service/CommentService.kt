@@ -6,10 +6,10 @@ import retrofit2.http.*
 
 interface CommentService {
 
-    @GET("/comment/post/{postId}")
+    @GET("comment/post/{postId}")
     fun getCommentsOnPost(@Path("postId") postId: Long): Call<List<CommentResponse>>
 
-    @POST("/comment")
+    @POST("comment")
     fun comment(
         @Query("comment") comment: String,
         @Query("post") post: Long

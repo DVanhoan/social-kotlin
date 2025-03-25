@@ -10,9 +10,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.hoan.client.R
 import com.hoan.client.adapter.CommentsRecyclerViewAdapter
-import com.hoan.client.database.repository.CacheService
 import com.hoan.client.databinding.FragmentCommentsBinding
 import com.hoan.client.network.response.CommentResponse
 import com.hoan.client.network.response.PostResponse
@@ -57,9 +57,13 @@ class CommentsFragment(
         }
 
 
-        CacheService.cacheProfilePicture(post.userId, binding.userPost.commenterProfilePicture)
-        binding.userPost.commenterName.text = post.username
-        binding.userPost.commentText.text = post.description
+        Glide.with(binding.userPost.commenterProfilePicture)
+            .load(post.user?.profilePicture)
+            .placeholder(android.R.color.holo_blue_light)
+            .into(binding.userPost.commenterProfilePicture)
+
+        binding.userPost.commenterName.text = post.user?.username
+        binding.userPost.commentText.text = post.content
         binding.userPost.lateTime.text = post.postingTime
 
         binding.sendCommentButton.setOnClickListener {

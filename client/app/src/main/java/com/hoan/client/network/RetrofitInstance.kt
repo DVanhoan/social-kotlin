@@ -2,6 +2,7 @@ package com.hoan.client.network
 
 import com.hoan.client.network.service.CommentService
 import com.hoan.client.network.service.FriendService
+import com.hoan.client.network.service.MessageService
 import com.hoan.client.network.service.PostService
 import com.hoan.client.network.service.ReactionService
 import com.hoan.client.network.service.UserService
@@ -35,7 +36,7 @@ object RetrofitInstance {
 
     private val retrofit: Retrofit = Retrofit.Builder()
         .client(client)
-        .baseUrl("http://192.168.1.14:8000/api/v1/")
+        .baseUrl("http://192.168.1.10:8000/api/v1/")
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 
@@ -44,4 +45,5 @@ object RetrofitInstance {
     val reactionService: ReactionService = retrofit.create(ReactionService::class.java)
     val commentService: CommentService = retrofit.create(CommentService::class.java)
     val friendService: FriendService = retrofit.create(FriendService::class.java)
+    val messageService: MessageService = retrofit.create(MessageService::class.java)
 }

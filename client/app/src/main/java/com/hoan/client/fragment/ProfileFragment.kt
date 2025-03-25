@@ -1,5 +1,6 @@
 package com.hoan.client.fragment
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -11,9 +12,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.hoan.client.LoginActivity
 import com.hoan.client.R
-import com.hoan.client.database.repository.CacheService
 import com.hoan.client.databinding.FragmentProfileBinding
 import com.hoan.client.network.response.UserResponse
+import com.squareup.picasso.Picasso
 
 class ProfileFragment(
     private var user: UserResponse
@@ -24,6 +25,8 @@ class ProfileFragment(
     private lateinit var sharedPreferences: SharedPreferences
     private val sharedPrefName = "user_shared_preference"
 
+    private val picasso: Picasso by lazy { Picasso.get() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sharedPreferences = requireActivity().getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
@@ -31,11 +34,7 @@ class ProfileFragment(
         Log.d("PROFILE_FRAGMENT", user.toString())
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentProfileBinding.inflate(inflater, container, false)
 
         binding.backButton.setOnClickListener {
@@ -55,10 +54,6 @@ class ProfileFragment(
             replaceFragment(fragment)
         }
 
-        binding.clearCacheButton.setOnClickListener {
-            CacheService.clear()
-        }
-
         binding.logoutButton.setOnClickListener {
             val editor: SharedPreferences.Editor = sharedPreferences.edit()
             editor.remove("userId")
@@ -66,7 +61,6 @@ class ProfileFragment(
             editor.remove("email")
             editor.remove("jwt")
             editor.apply()
-            CacheService.clear()
             val intent = Intent(requireActivity(), LoginActivity::class.java)
             requireActivity().finish()
             startActivity(intent)
@@ -100,6 +94,7 @@ class ProfileFragment(
         refreshView()
     }
 
+    @SuppressLint("DetachAndAttachSameFragment")
     private fun refreshView() {
         requireActivity().supportFragmentManager.beginTransaction()
             .detach(this)
@@ -111,10 +106,11 @@ class ProfileFragment(
 
     private fun rebuildView() {
         binding.etFullName.text = user.fullName ?: ""
-        binding.etUsername.text = "@${user.username}"
+        binding.etUsername.text = user.username
         binding.etBiography.text = user.biography ?: ""
         binding.etLocation.text = user.location ?: ""
-        CacheService.cacheProfilePicture(user, binding.civProfilePicture)
+        binding.etCalendar.text = "Joined social in ${user.registration_date}" ?: ""
+        picasso.load(user.profilePicture).placeholder(R.color.primaryAccent).into(binding.civProfilePicture)
     }
 
     companion object {

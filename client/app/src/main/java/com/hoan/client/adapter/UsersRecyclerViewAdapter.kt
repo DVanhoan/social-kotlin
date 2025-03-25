@@ -1,6 +1,5 @@
 package com.hoan.client.adapter
 
-import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -9,11 +8,11 @@ import android.widget.EditText
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.hoan.client.R
-import com.hoan.client.database.repository.CacheService
 import com.hoan.client.databinding.UserItemBinding
 import com.hoan.client.network.response.FriendshipResponse
 import com.hoan.client.network.response.UserResponse
 import com.hoan.client.network.RetrofitInstance
+import com.squareup.picasso.Picasso
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -24,6 +23,7 @@ class UsersRecyclerViewAdapter(
 ) : RecyclerView.Adapter<UsersRecyclerViewAdapter.UserViewHolder>() {
 
     private var userList = mutableListOf<UserResponse>()
+    private val picasso: Picasso by lazy { Picasso.get() }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
         val binding =
@@ -73,9 +73,11 @@ class UsersRecyclerViewAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(position: Int) {
             val user = userList[position]
-            CacheService.cacheProfilePicture(user, binding.civProfilePicture)
+            picasso.load(user.profilePicture)
+                .placeholder(R.color.primaryAccent)
+                .into(binding.civProfilePicture)
             binding.tvFullName.text = user.fullName
-            binding.tvUsername.text = "@${user.username}"
+            binding.tvUsername.text = user.username
 
             when (listType) {
                 ListType.USER -> {

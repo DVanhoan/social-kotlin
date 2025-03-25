@@ -65,13 +65,10 @@ dependencies {
     implementation libs.imagepicker
     // Location
     implementation libs.play.services.location
-    // Firebase
-    implementation platform('com.google.firebase:firebase-bom:29.3.1')
-    implementation 'com.google.firebase:firebase-auth-ktx'
-    // Firebase messaging for push notifications
-    implementation 'com.google.firebase:firebase-messaging-ktx:23.1.0'
 
     implementation libs.circleimageview
     implementation libs.custom.snackbar
     implementation libs.picasso
+
+    implementation libs.pusher.java.client
 }

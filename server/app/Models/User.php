@@ -11,6 +11,18 @@ class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
+
+    protected $visible = [
+        'id',
+        'username',
+        'fullName',
+        'email',
+        'biography',
+        'location',
+        'profile_picture',
+        'registration_date'
+    ];
+
     protected $fillable = [
         'username',
         'password',
@@ -29,7 +41,7 @@ class User extends Authenticatable implements JWTSubject
 
     public function posts()
     {
-        return $this->hasMany(Post::class);
+        return $this->hasMany(Post::class, 'user_id');
     }
 
 
@@ -59,10 +71,23 @@ class User extends Authenticatable implements JWTSubject
 
     public function friends()
     {
-        $friendsFromSent = $this->sentFriendRequests()->where('status', 'accepted')->with('receiver')->get()->pluck('receiver');
-        $friendsFromReceived = $this->receivedFriendRequests()->where('status', 'accepted')->with('requester')->get()->pluck('requester');
-        return $friendsFromSent->merge($friendsFromReceived);
+        return $this->belongsToMany(User::class, 'friendships', 'user1_id', 'user2_id')
+            ->wherePivot('status', 'accepted');
     }
+
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_members')
+            ->withPivot('is_admin', 'joined_at')
+            ->withTimestamps();
+    }
+
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
 
     public function getJWTIdentifier()
     {

@@ -8,27 +8,22 @@ data class PostResponse(
     @Json(name = "id")
     val id: Long,
 
-    @Json(name = "userId")
-    val userId: Long,
-
-    @Json(name = "username")
-    val username: String,
-
-    @Json(name = "mainPhoto")
+    @Json(name = "main_photo")
     val mainPhoto: String,
 
-    @Json(name = "selfiePhoto")
-    val selfiePhoto: String,
-
-    @Json(name = "description")
-    val description: String?,
+    @Json(name = "content")
+    val content: String?,
 
     @Json(name = "location")
     val location: String?,
 
-    @Json(name = "postingTime")
+    @Json(name = "posting_time")
     val postingTime: String,
 
     @Json(name = "deleted")
-    val deleted: Boolean
+    val deleted: Boolean,
+
+    @Json(name = "user")
+    var user: UserResponse?
 )
+

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
-    tools:context=".SplashActivity">
+    tools:context=".MainActivity">
 
     <ImageView
         android:id="@+id/logo"
@@ -13,11 +13,11 @@
         android:layout_height="match_parent"
         android:layout_marginHorizontal="50dp"
         android:contentDescription="@string/logo"
-        android:src="@drawable/icon"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/white" />
+        android:scaleType="fitCenter"
+        android:src="@drawable/icon" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

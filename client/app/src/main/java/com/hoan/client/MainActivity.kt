@@ -1,5 +1,6 @@
 package com.hoan.client
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -11,6 +12,7 @@ import com.hoan.client.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private val sharedPrefName = "user_shared_preference"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +27,13 @@ class MainActivity : AppCompatActivity() {
         )
 
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, LoginActivity::class.java)
+            val sharedPreferences = getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
+            val token = sharedPreferences.getString("jwt", null)
+            val intent = if (token.isNullOrEmpty()) {
+                Intent(this, LoginActivity::class.java)
+            } else {
+                Intent(this, FeedActivity::class.java)
+            }
             startActivity(intent)
             finish()
         }, 1500)

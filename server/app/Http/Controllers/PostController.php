@@ -6,71 +6,77 @@ use Illuminate\Http\Request;
 use App\Models\Post;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PostController extends Controller
 {
-    public function getImage($filename)
-    {
-        $path = Cloudinary::path($filename);
-        if ($path) {
-            return response()->file($path);
-        }
-        return response()->json(['error' => 'Image not found'], 404);
-    }
-
-    public function canUserPost()
-    {
-        return response()->json(true, 200);
-    }
 
     public function getPostsFromFriends()
     {
-        $user = Auth::user();
+        $user = Auth::guard('api')->user();
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         $friendsIds = $user->friends->pluck('id')->toArray();
-        $posts = Post::whereIn('user_id', $friendsIds)->get();
+
+        if (empty($friendsIds)) {
+            return response()->json([], 200);
+        }
+
+        $posts = Post::with('user')
+            ->whereIn('user_id', $friendsIds)
+            ->where('deleted', false)
+            ->orderBy('posting_time', 'desc')
+            ->get();
+
+        return response()->json($posts, 200);
+    }
+
+
+    public function getAllPosts()
+    {
+        $posts = Post::with('user')
+        ->where('deleted', false)
+            ->orderBy('posting_time', 'desc')
+            ->get();
+
         if ($posts->isEmpty()) {
-            return response()->json(['error' => 'No posts found'], 404);
+            return response()->json([
+                'message' => 'No posts found',
+            ]);
         }
         return response()->json($posts, 200);
     }
 
-    public function getTodaysPostByUser($userId)
-    {
-        $today = date('Y-m-d');
-        $post = Post::where('user_id', $userId)
-            ->whereDate('posting_time', $today)
-            ->first();
-        if ($post) {
-            return response()->json($post, 200);
-        }
-        return response()->json(['error' => 'No post found for today'], 404);
-    }
 
 
     public function createPost(Request $request)
     {
-
-        if (!$request->hasFile('mainPhoto') || !$request->hasFile('selfiePhoto')) {
+        if (!$request->hasFile('mainPhoto')) {
             return response()->json(['error' => 'Files missing'], 400);
         }
         $mainPhoto = $request->file('mainPhoto');
-        $selfiePhoto = $request->file('selfiePhoto');
 
-        if (!$mainPhoto->isValid() || !$selfiePhoto->isValid()) {
+        if (!$mainPhoto->isValid()) {
             return response()->json(['error' => 'Invalid files'], 400);
         }
 
-        $mainPhotoName = Cloudinary::upload($mainPhoto->getRealPath())->getSecurePath();
-        $selfiePhotoName = Cloudinary::upload($selfiePhoto->getRealPath())->getSecurePath();
+        $auth = Auth::guard('api')->user();
+
+        try {
+            $cloudinaryUpload = Cloudinary::upload($mainPhoto->getRealPath());
+            $mainPhotoName = $cloudinaryUpload->getSecurePath();
+            Log::info('Cloudinary upload success', ['url' => $mainPhotoName]);
+        } catch (\Exception $e) {
+            Log::error('Cloudinary upload failed', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Upload failed'], 500);
+        }
+
 
         $post = Post::create([
-            'user_id'      => $request->input('user_id'),
-            'username'     => $request->input('username'),
+            'user_id'      => $auth->id,
             'main_photo'   => $mainPhotoName,
-            'selfie_photo' => $selfiePhotoName,
+            'content'      => $request->input('content'),
             'location'     => $request->input('location'),
             'posting_time' => now(),
             'deleted'      => false,

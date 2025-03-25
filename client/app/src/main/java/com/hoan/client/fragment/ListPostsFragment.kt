@@ -1,55 +1,71 @@
 package com.hoan.client.fragment
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
-import android.net.Uri
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.github.dhaval2404.imagepicker.ImagePicker
+import com.hoan.client.NewPostActivity
 import com.hoan.client.R
 import com.hoan.client.adapter.PostsRecyclerViewAdapter
+import com.hoan.client.adapter.PostsRecyclerViewAdapter.ReactionListener
+import com.hoan.client.adapter.PostsRecyclerViewAdapter.SettingsListener
 import com.hoan.client.constant.Constants
+import com.hoan.client.constant.ImagePickType
 import com.hoan.client.databinding.FragmentListPostsBinding
-import com.hoan.client.network.response.CommentResponse
+import com.hoan.client.network.RetrofitInstance
 import com.hoan.client.network.response.PostResponse
 import com.hoan.client.network.response.ReactionResponse
 import com.hoan.client.network.response.UserResponse
-import com.hoan.client.network.RetrofitInstance
+import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.io.File
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
 
 class ListPostsFragment(private var user: UserResponse) :
     Fragment(R.layout.fragment_list_posts),
-    EditProfileFragment.EditedUserListener,
-    PostsRecyclerViewAdapter.ReactionListener {
+    ReactionListener {
 
     private var _binding: FragmentListPostsBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var imagePicker: ImagePicker.Builder
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var postsRecyclerViewAdapter: PostsRecyclerViewAdapter
+
+    private var currentPickType: ImagePickType? = null
+
+    private lateinit var imagePicker: ImagePicker.Builder
 
     private var reactionOnPostID: Long? = null
     private var reactionPosition: Int? = null
 
-    private lateinit var postsRecyclerViewAdapter: PostsRecyclerViewAdapter
-
-    private val sharedPrefName = "user_shared_preference"
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val fileUri = result.data?.data
+                if (fileUri != null) {
+                    navigateToNewPost(fileUri.toString())
+                }
+            } else if (result.resultCode == ImagePicker.RESULT_ERROR) {
+                Constants.showErrorSnackbar(
+                    requireContext(),
+                    layoutInflater,
+                    ImagePicker.getError(result.data)
+                )
+            }
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,226 +73,179 @@ class ListPostsFragment(private var user: UserResponse) :
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentListPostsBinding.inflate(inflater, container, false)
-        sharedPreferences = requireActivity().getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
+
+        sharedPreferences =
+            requireActivity().getSharedPreferences("user_shared_preference", Context.MODE_PRIVATE)
         val token = sharedPreferences.getString("jwt", "") ?: ""
         RetrofitInstance.setToken(token)
 
         imagePicker = ImagePicker.with(requireActivity())
-            .cropSquare()
             .compress(1024)
             .maxResultSize(720, 1080)
-            .cameraOnly()
             .galleryMimeTypes(arrayOf("image/png", "image/jpg", "image/jpeg"))
 
-        getTodaysPostByUser(user.id)
         setupRecyclerView()
+        getAllPosts()
+
+
+        binding.tvStatus.setOnClickListener {
+            navigateToNewPost(null)
+        }
+
+
+        binding.btnImage.setOnClickListener {
+            if (!checkPermissions()) return@setOnClickListener
+
+            val options = arrayOf("Chụp ảnh", "Chọn ảnh từ thư viện")
+            android.app.AlertDialog.Builder(requireContext())
+                .setTitle("Chọn nguồn ảnh")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> imagePicker.cameraOnly().createIntent { pickImageLauncher.launch(it) }
+                        1 -> imagePicker.galleryOnly().createIntent { pickImageLauncher.launch(it) }
+                    }
+                }
+                .show()
+        }
 
         return binding.root
     }
 
-    override fun reaction(postId: Long, position: Int) {
-        Log.d("REACTION", "Reacting to post: $postId")
-        reactionOnPostID = postId
-        reactionPosition = position
-        imagePicker.createIntent { intent ->
-            startForReactionImageResult.launch(intent)
-        }
+
+    private fun navigateToNewPost(imageUri: String?) {
+        val intent = Intent(requireContext(), NewPostActivity::class.java)
+        imageUri?.let { intent.putExtra("imageUri", it) }
+        startActivity(intent)
     }
 
-    private fun react(multipart: MultipartBody.Part) {
-        RetrofitInstance.reactionService.react(
-            reaction = multipart,
-            postId = reactionOnPostID!!
-        ).enqueue(object : Callback<ReactionResponse> {
-            override fun onResponse(
-                call: Call<ReactionResponse>,
-                response: Response<ReactionResponse>
-            ) {
-                if (response.isSuccessful && response.body() != null) {
-                    onReactionSuccess(response.code(), response.body()!!, reactionPosition!!)
-                } else {
-                    generalError(response.code(), Exception("Error reacting: ${response.message()}"))
-                }
-            }
-
-            override fun onFailure(call: Call<ReactionResponse>, t: Throwable) {
-                generalError(500, t)
-            }
-        })
-    }
-
-    private fun onReactionSuccess(statusCode: Int, responseBody: ReactionResponse, position: Int) {
-        Log.d("REACTION_SUCCESSFUL", "Status code: $statusCode")
-        postsRecyclerViewAdapter.notifyItemChanged(position + 1)
-    }
-
-    private val startForReactionImageResult =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            val resultCode = result.resultCode
-            val data = result.data
-
-            when (resultCode) {
-                Activity.RESULT_OK -> {
-                    val fileUri: Uri = data?.data!!
-                    val multipart = getMultiPartReactionImageFromUri(fileUri)
-                    if (reactionOnPostID != null && reactionPosition != null) {
-                        react(multipart)
-                    }
-                    reactionOnPostID = null
-                    reactionPosition = null
-                }
-                ImagePicker.RESULT_ERROR -> {
-                    Constants.showErrorSnackbar(
-                        requireContext(),
-                        layoutInflater,
-                        ImagePicker.getError(data)
-                    )
-                }
-                else -> {
-                    Constants.showErrorSnackbar(
-                        requireContext(),
-                        layoutInflater,
-                        "Upload Cancelled"
-                    )
-                }
-            }
-        }
-
-    private fun getMultiPartReactionImageFromUri(uri: Uri): MultipartBody.Part {
-        val file = File(uri.path!!)
-        val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
-        return MultipartBody.Part.createFormData("reaction", file.name, requestBody)
-    }
-
-    private fun getTodaysPostByUser(userId: Long) {
-        RetrofitInstance.postService.getTodaysPostByUser(userId)
-            .enqueue(object : Callback<PostResponse> {
-                override fun onResponse(call: Call<PostResponse>, response: Response<PostResponse>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        getTodaysPostByUserSuccess(response.code(), response.body()!!)
-                    } else {
-                        generalError(response.code(), Exception("Error fetching today's post: ${response.message()}"))
-                    }
-                }
-
-                override fun onFailure(call: Call<PostResponse>, t: Throwable) {
-                    generalError(500, t)
-                }
-            })
-    }
-
-    private fun getTodaysPostByUserSuccess(statusCode: Int, responseBody: PostResponse) {
-        Log.d("GET_TODAYS_POST", "Successfully got today's post: $responseBody Status code: $statusCode")
-        postsRecyclerViewAdapter.setUserCard(user)
-        postsRecyclerViewAdapter.setUserPost(responseBody)
-        getPostsFromFriends()
-        getCommentsOnPost(responseBody.id)
-        getReactionsOnPost(responseBody.id)
-    }
-
-    private fun getPostsFromFriends() {
-        RetrofitInstance.postService.getPostsFromFriends()
-            .enqueue(object : Callback<List<PostResponse>> {
-                override fun onResponse(call: Call<List<PostResponse>>, response: Response<List<PostResponse>>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        getPostsFromFriendsSuccess(response.code(), response.body()!!)
-                    } else {
-                        generalError(response.code(), Exception("Error fetching posts from friends: ${response.message()}"))
-                    }
-                }
-                override fun onFailure(call: Call<List<PostResponse>>, t: Throwable) {
-                    generalError(500, t)
-                }
-            })
-    }
-
-    private fun getPostsFromFriendsSuccess(statusCode: Int, responseBody: List<PostResponse>) {
-        Log.d("GET_POSTS_FROM_FRIENDS", "Successfully got posts from friends: $responseBody Status code: $statusCode")
-        postsRecyclerViewAdapter.addAll(responseBody)
-        responseBody.forEach {
-            getCommentsOnPost(it.id)
-            getReactionsOnPost(it.id)
-        }
-    }
-
-    private fun getReactionsOnPost(postId: Long) {
-        RetrofitInstance.reactionService.getReactionsOnPost(postId)
-            .enqueue(object : Callback<List<ReactionResponse>> {
-                override fun onResponse(call: Call<List<ReactionResponse>>, response: Response<List<ReactionResponse>>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        getReactionsOnPostSuccess(response.code(), response.body()!!)
-                    } else {
-                        generalError(response.code(), Exception("Error fetching reactions: ${response.message()}"))
-                    }
-                }
-                override fun onFailure(call: Call<List<ReactionResponse>>, t: Throwable) {
-                    generalError(500, t)
-                }
-            })
-    }
-
-    private fun getReactionsOnPostSuccess(statusCode: Int, responseBody: List<ReactionResponse>) {
-        Log.d("GET_REACTIONS", "Successfully got reactions: $responseBody Status code: $statusCode")
-        if (responseBody.isEmpty()) return
-        postsRecyclerViewAdapter.addReactions(responseBody[0].postId, responseBody)
-    }
-
-    private fun getCommentsOnPost(postId: Long) {
-        RetrofitInstance.commentService.getCommentsOnPost(postId)
-            .enqueue(object : Callback<List<CommentResponse>> {
-                override fun onResponse(call: Call<List<CommentResponse>>, response: Response<List<CommentResponse>>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        getCommentsOnPostSuccess(response.code(), response.body()!!)
-                    } else {
-                        generalError(response.code(), Exception("Error fetching comments: ${response.message()}"))
-                    }
-                }
-                override fun onFailure(call: Call<List<CommentResponse>>, t: Throwable) {
-                    generalError(500, t)
-                }
-            })
-    }
-
-    private fun getCommentsOnPostSuccess(statusCode: Int, responseBody: List<CommentResponse>) {
-        Log.d("GET_COMMENTS", "Successfully got comments: $responseBody Status code: $statusCode")
-        if (responseBody.isEmpty()) return
-        postsRecyclerViewAdapter.addComments(responseBody[0].postId, responseBody)
-    }
-
-    private fun generalError(statusCode: Int, e: Throwable) {
-        Log.e("API_CALL_ERROR", "Error $statusCode during API call")
-        e.printStackTrace()
-    }
 
     private fun setupRecyclerView() {
-        val llm = LinearLayoutManager(context).apply {
-            orientation = LinearLayoutManager.VERTICAL
-        }
-        postsRecyclerViewAdapter = PostsRecyclerViewAdapter(this, requireActivity())
-        val list = binding.root.findViewById<RecyclerView>(R.id.posts_recycler_view)
-        list.layoutManager = llm
-        list.adapter = postsRecyclerViewAdapter
+        val layoutManager = LinearLayoutManager(requireContext())
+        binding.postsRecyclerView.layoutManager = layoutManager
+        postsRecyclerViewAdapter = PostsRecyclerViewAdapter(
+            currentUserId = user.id,
+            reactionListener = this,
+            settingsListener = object : SettingsListener {
+                override fun onEditPost(post: PostResponse) {
+                    Log.d("SETTINGS", "Edit post: $post")
+                }
+
+                override fun onDeletePost(post: PostResponse) {
+                    Log.d("SETTINGS", "Delete post: $post")
+                }
+
+                override fun onReportPost(post: PostResponse) {
+                    Log.d("SETTINGS", "Report post: $post")
+                }
+            },
+            activity = requireActivity()
+        )
+        binding.postsRecyclerView.adapter = postsRecyclerViewAdapter
     }
 
-    override fun updateUserDetails(user: UserResponse) {
-        Log.d("UPDATE_USER", "Updating user details: $user")
+
+    private fun getAllPosts() {
+        RetrofitInstance.postService.getAllPosts()
+            .enqueue(object : Callback<List<PostResponse>> {
+                override fun onResponse(
+                    call: Call<List<PostResponse>>,
+                    response: Response<List<PostResponse>>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val list = response.body()!!
+                        Log.d("POSTS", list.toString())
+                        postsRecyclerViewAdapter.setPosts(list)
+                    } else {
+                        showError("Error fetching posts: ${response.message()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<List<PostResponse>>, t: Throwable) {
+                    showError("Error fetching posts: ${t.localizedMessage}")
+                }
+            })
+    }
+
+    private fun checkPermissions(): Boolean {
+        val needLocation = ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        val needCamera = ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.CAMERA
+        )
+        val permissionsToRequest = mutableListOf<String>()
+        if (needLocation != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+        if (needCamera != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(Manifest.permission.CAMERA)
+        }
+        return if (permissionsToRequest.isNotEmpty()) {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                permissionsToRequest.toTypedArray(),
+                123
+            )
+            false
+        } else true
+    }
+
+    private fun showError(msg: String) {
+        Constants.showErrorSnackbar(requireContext(), layoutInflater, msg)
+    }
+
+    override fun reaction(postId: Long, position: Int) {
+        reactionOnPostID = postId
+        reactionPosition = position
+        currentPickType = ImagePickType.REACTION
+
+        imagePicker.cameraOnly().createIntent { pickImageLauncher.launch(it) }
+    }
+
+    private fun react(postId: Long, position: Int, reactionPart: MultipartBody.Part) {
+        RetrofitInstance.reactionService.react(reactionPart, postId)
+            .enqueue(object : Callback<ReactionResponse> {
+                override fun onResponse(
+                    call: Call<ReactionResponse>,
+                    response: Response<ReactionResponse>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        postsRecyclerViewAdapter.notifyItemChanged(position + 1)
+                    } else {
+                        showError("Error reacting: ${response.message()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<ReactionResponse>, t: Throwable) {
+                    showError("Error reacting: ${t.localizedMessage}")
+                }
+            })
+        reactionOnPostID = null
+        reactionPosition = null
+    }
+
+
+    fun updateUserDetails(user: UserResponse) {
         this.user = user
         postsRecyclerViewAdapter.updateUser(user)
     }
 
-    // Callback cho nút Back của hệ thống
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        val callback: OnBackPressedCallback =
+        requireActivity().onBackPressedDispatcher.addCallback(
+            this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    if (requireActivity().supportFragmentManager.fragments.size == 1)
+                    if (requireActivity().supportFragmentManager.fragments.size == 1) {
                         requireActivity().finish()
-                    else
+                    } else {
                         requireActivity().supportFragmentManager.popBackStack()
+                    }
                 }
             }
-        requireActivity().onBackPressedDispatcher.addCallback(this, callback)
+        )
     }
 
     override fun onDestroyView() {
@@ -285,7 +254,6 @@ class ListPostsFragment(private var user: UserResponse) :
     }
 
     companion object {
-        @JvmStatic
         fun newInstance(user: UserResponse) = ListPostsFragment(user)
     }
 }

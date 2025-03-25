@@ -12,11 +12,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.hoan.client.R
 import com.hoan.client.adapter.ReactionsRecyclerViewAdapter
-import com.hoan.client.database.repository.CacheService
 import com.hoan.client.databinding.FragmentReactionsBinding
 import com.hoan.client.network.response.PostResponse
 import com.hoan.client.network.response.ReactionResponse
 import com.hoan.client.network.RetrofitInstance
+import com.squareup.picasso.Picasso
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -29,15 +29,14 @@ class ReactionsFragment(
     private var _binding: FragmentReactionsBinding? = null
     private val binding get() = _binding!!
 
+    private val picasso: Picasso by lazy { Picasso.get() }
+
     private lateinit var sharedPreferences: SharedPreferences
     private val sharedPrefName = "user_shared_preference"
 
     private lateinit var reactionsRecyclerViewAdapter: ReactionsRecyclerViewAdapter
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentReactionsBinding.inflate(inflater, container, false)
 
         sharedPreferences = requireActivity().getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
@@ -51,14 +50,16 @@ class ReactionsFragment(
 
         binding.commentsButton.setOnClickListener {
             val fragment = CommentsFragment.newInstance(post, emptyList(), reactions)
-            setupRecyclerView() // Nếu cần setup lại trước chuyển sang bình luận
+            setupRecyclerView()
             goToComments(fragment, "COMMENTS")
         }
 
-        // Sử dụng CacheService trực tiếp để load ảnh đại diện của người đăng bài dựa theo userId
-        CacheService.cacheProfilePicture(post.userId, binding.userPost.commenterProfilePicture)
-        binding.userPost.commenterName.text = post.username
-        binding.userPost.commentText.text = post.description
+        picasso.load(post.user?.profilePicture).into(binding.userPost.commenterProfilePicture)
+
+
+
+        binding.userPost.commenterName.text = post.user?.username
+        binding.userPost.commentText.text = post.content
         binding.userPost.lateTime.text = post.postingTime
 
         setupRecyclerView()

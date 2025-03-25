@@ -9,21 +9,18 @@ import retrofit2.http.*
 
 interface PostService {
 
-    @GET("posts/post/user-can-post")
-    fun canUserPost(): Call<Boolean>
-
     @GET("posts/post/friends")
     fun getPostsFromFriends(): Call<List<PostResponse>>
 
-    @GET("posts/post/today/{userId}")
-    fun getTodaysPostByUser(@Path("userId") userId: Long): Call<PostResponse>
+    @GET("posts/post/all")
+    fun getAllPosts(): Call<List<PostResponse>>
 
     @Multipart
     @POST("posts/post/create")
     fun createPost(
-        @Part mainPhoto: MultipartBody.Part,
-        @Part selfiePhoto: MultipartBody.Part,
-        @Part("location") location: RequestBody
+        @Part mainPhoto: MultipartBody.Part?,
+        @Part("content") content: RequestBody,
+        @Part("location") location: RequestBody,
     ): Call<PostResponse>
 
     @PATCH("posts/post/{postId}")
@@ -32,6 +29,6 @@ interface PostService {
         @Query("description") description: String
     ): Call<PostResponse>
 
-    @GET("posts/post/{filename}")
+    @GET("posts/post/image/{filename}")
     fun getImageUrl(@Path("filename") filename: String): Call<ResponseBody>
 }

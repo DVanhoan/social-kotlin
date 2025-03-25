@@ -1,4 +1,5 @@
 package com.hoan.client.constant
 
-class ImagePickType {
+enum class ImagePickType {
+    MAIN_PHOTO, REACTION
 }

@@ -1,9 +1,0 @@
-package com.hoan.client.network.response
-
-data class MessageItem(
-    val id: Int,
-    val sender: UserResponse,
-    val content: String,
-    val created_at: String,
-    val isSender: Boolean
-)

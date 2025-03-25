@@ -8,14 +8,14 @@ import retrofit2.http.*
 
 interface ReactionService {
 
-    @GET("/reaction/post/{postId}")
+    @GET("reaction/post/{postId}")
     fun getReactionsOnPost(@Path("postId") postId: Long): Call<List<ReactionResponse>>
 
-    @GET("/reaction/{filename}")
+    @GET("reaction/{filename}")
     fun getReactionImageUrl(@Path("filename") filename: String): Call<ResponseBody>
 
     @Multipart
-    @POST("/reaction")
+    @POST("reaction")
     fun react(
         @Part reaction: MultipartBody.Part,
         @Part("post") postId: Long,

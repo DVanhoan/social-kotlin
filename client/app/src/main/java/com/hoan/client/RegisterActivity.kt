@@ -38,11 +38,15 @@ class RegisterActivity : AppCompatActivity() {
         binding.btnRegister.setOnClickListener {
             val username = binding.etUsername.text.toString()
             val password = binding.etPassword.text.toString()
-            val fullName = binding.etFullName.text.toString()
+            val fullName = binding.etFullname.text.toString()
             val email = binding.etEmail.text.toString()
 
             registerRequest = RegisterRequest(username, password, fullName, email)
             register(registerRequest)
+        }
+
+        binding.btnSwitchToLogin.setOnClickListener {
+            finish()
         }
 
         binding.etUsername.addTextChangedListener { text ->
@@ -67,12 +71,12 @@ class RegisterActivity : AppCompatActivity() {
             toggleRegisterButtonState()
         }
 
-        binding.etFullName.addTextChangedListener { text ->
+        binding.etFullname.addTextChangedListener { text ->
             if (text.toString().length < 7 || text.toString().length > 20) {
-                binding.etFullName.setTextColor(ContextCompat.getColor(baseContext, R.color.red))
+                binding.etFullname.setTextColor(ContextCompat.getColor(baseContext, R.color.red))
                 isFullNameCorrect = false
             } else {
-                binding.etFullName.setTextColor(ContextCompat.getColor(baseContext, R.color.dark_grey))
+                binding.etFullname.setTextColor(ContextCompat.getColor(baseContext, R.color.dark_grey))
                 isFullNameCorrect = true
             }
             toggleRegisterButtonState()

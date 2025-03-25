@@ -11,7 +11,8 @@ class FriendshipController extends Controller
 
     public function addFriend($userId, Request $request)
     {
-        $currentUserId = Auth::id();
+        $user = Auth::guard('api')->user();
+        $currentUserId = $user->id;
         $friendship = Friendship::create(attributes: [
             'user1_id' => $currentUserId,
             'user2_id' => $userId,
@@ -23,7 +24,8 @@ class FriendshipController extends Controller
 
     public function acceptFriendRequest($userId, Request $request)
     {
-        $currentUserId = Auth::id();
+        $user = Auth::guard('api')->user();
+        $currentUserId = $user->id;
         $friendship = Friendship::where('user1_id', $userId)
             ->where('user2_id', $currentUserId)
             ->first();
@@ -38,7 +40,8 @@ class FriendshipController extends Controller
 
     public function rejectFriend($userId, Request $request)
     {
-        $currentUserId = $request->input('current_user_id');
+        $user = Auth::guard('api')->user();
+        $currentUserId = $user->id;
         $friendship = Friendship::where('user1_id', $userId)
             ->where('user2_id', $currentUserId)
             ->first();
@@ -53,7 +56,8 @@ class FriendshipController extends Controller
 
     public function getPendingRequests(Request $request)
     {
-        $currentUserId = Auth::id();
+        $user = Auth::guard('api')->user();
+        $currentUserId = $user->id;
         $pending = Friendship::where('user2_id', $currentUserId)
             ->where('status', 'pending')
             ->get();
@@ -61,9 +65,10 @@ class FriendshipController extends Controller
     }
 
 
-    public function getListOfFriends(Request $request)
+    public function getListOfFriends()
     {
-        $currentUserId = Auth::id();
+        $user = Auth::guard('api')->user();
+        $currentUserId = $user->id;
         $friends1 = Friendship::where('user1_id', $currentUserId)
             ->where('status', 'accepted')
             ->pluck('user2_id');

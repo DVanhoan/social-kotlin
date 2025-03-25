@@ -10,10 +10,8 @@ return new class extends Migration {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('username');
             $table->string('main_photo');
-            $table->string('selfie_photo');
-            $table->text('description')->nullable();
+            $table->text('content')->nullable();
             $table->string('location')->nullable();
             $table->timestamp('posting_time')->useCurrent();
             $table->boolean('deleted')->default(false);

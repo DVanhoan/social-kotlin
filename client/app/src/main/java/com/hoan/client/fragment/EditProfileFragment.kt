@@ -18,13 +18,13 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.github.dhaval2404.imagepicker.ImagePicker
+import com.hoan.client.R
 import com.hoan.client.constant.Constants
-import com.hoan.client.database.repository.CacheService
 import com.hoan.client.databinding.FragmentEditProfileBinding
 import com.hoan.client.network.request.UserRequest
-import com.hoan.client.network.response.JwtResponse
 import com.hoan.client.network.response.UserResponse
 import com.hoan.client.network.RetrofitInstance
+import com.squareup.picasso.Picasso
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -36,10 +36,12 @@ import java.io.File
 class EditProfileFragment(
     private var user: UserResponse,
     private val editUserListeners: List<EditedUserListener>
-) : Fragment(com.hoan.client.R.layout.fragment_edit_profile) {
+) : Fragment(R.layout.fragment_edit_profile) {
 
     private var _binding: FragmentEditProfileBinding? = null
     private val binding get() = _binding!!
+
+    private val picasso: Picasso by lazy { Picasso.get() }
 
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var imagePicker: ImagePicker.Builder
@@ -48,7 +50,6 @@ class EditProfileFragment(
 
     private val sharedPrefName = "user_shared_preference"
 
-    private val cache: CacheService = CacheService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -204,7 +205,8 @@ class EditProfileFragment(
         binding.etBiography.setText(user.biography ?: "")
         binding.etLocation.setText(user.location ?: "")
 
-        cache.cacheProfilePicture(user, binding.civProfilePicture)
+        picasso.load(user.profilePicture).placeholder(R.color.primaryAccent)
+            .into(binding.civProfilePicture)
 
         return binding.root
     }
@@ -229,7 +231,11 @@ class EditProfileFragment(
     private fun editProfilePictureSuccess(statusCode: Int, responseBody: UserResponse) {
         Log.d("EDIT_PROFILE_PICTURE", "Successfully edited profile picture: $responseBody Status code: $statusCode")
         if (user.profilePicture != null)
-            cache.resetKey(user.profilePicture!!)
+            picasso.load(responseBody.profilePicture)
+                .placeholder(R.color.primaryAccent)
+                .into(binding.civProfilePicture)
+
+
         editUserListeners.forEach { it.updateUserDetails(responseBody) }
     }
 

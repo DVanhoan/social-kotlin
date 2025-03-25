@@ -59,7 +59,7 @@ class UserController extends Controller
     public function me()
     {
         $user = Auth::guard('api')->user();
-        return response()->json(['user' => $user]);
+        return response()->json($user, 200);
     }
 
 
@@ -81,27 +81,53 @@ class UserController extends Controller
 
     public function editUser(Request $request)
     {
+        $user = auth()->guard('api')->user();
 
-        $user = User::find($request->input('id'));
-        if ($user) {
-            $user->fill($request->only(['fullName', 'username', 'email', 'biography', 'location']));
-            $user->save();
-            return response()->json($user, 200);
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
         }
-        return response()->json(['error' => 'User not found'], 404);
+
+        $validatedData = $request->validate([
+            'fullName' => 'string',
+            'username' => 'string',
+            'email' => 'string|email',
+            'biography' => 'string|nullable',
+            'location' => 'string|nullable',
+        ]);
+
+        if (!$request->hasAny(array_keys($validatedData))) {
+            return response()->json(['error' => 'No data provided'], 400);
+        }
+
+        $user->fill([
+            'fullName' => $validatedData['fullName'] ?? $user->fullName,
+            'username' => $validatedData['username'] ?? $user->username,
+            'email' => $validatedData['email'] ?? $user->email,
+            'biography' => $validatedData['biography'] ?? $user->biography,
+            'location' => $validatedData['location'] ?? $user->location,
+        ]);
+
+        $user->save();
+
+        return response()->json($user);
     }
+
 
     public function getUserByUserId($userId)
     {
         $user = User::find($userId);
         if ($user) {
-            return response()->json($user, 200);
+            return response()->json($user);
         }
         return response()->json(['error' => 'User not found'], 404);
     }
 
     public function uploadProfilePicture(Request $request)
     {
+        $request->validate([
+            'picture' => 'required|image',
+        ]);
+
         if ($request->hasFile('picture')) {
             $file = $request->file('picture');
             if ($file->isValid()) {
@@ -110,7 +136,7 @@ class UserController extends Controller
                 return response()->json(['error' => 'Invalid file'], 400);
             }
 
-            $user = User::find($request->input('id'));
+            $user = auth()->guard('api')->user();
             if ($user) {
                 $user->profile_picture = $filename;
                 $user->save();
@@ -125,9 +151,10 @@ class UserController extends Controller
     public function getProfilePicture($userId)
     {
         $user = User::find($userId);
-        if ($user && $user->profile_picture) {
-            return response()->json(['profile_picture' => $user->profile_picture], 200);
+
+        if(!$user || !$user->profile_picture) {
+            return response()->json(['error' => 'Profile picture not found'], 404);
         }
-        return response()->json(['error' => 'Profile picture not found'], 404);
+        return response()->json($user->profile_picture, 200);
     }
 }

@@ -16,8 +16,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.hoan.client.R
 import com.hoan.client.adapter.UsersRecyclerViewAdapter
-import com.hoan.client.database.ImageCacheDatabase
-import com.hoan.client.database.repository.CacheService
 import com.hoan.client.databinding.FragmentUsersBinding
 import com.hoan.client.network.response.FriendshipResponse
 import com.hoan.client.network.response.UserResponse
@@ -44,21 +42,10 @@ class UsersFragment(private val userList: List<UserResponse>) : Fragment(R.layou
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentUsersBinding.inflate(inflater, container, false)
-        sharedPreferences =
-            requireActivity().getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
+        sharedPreferences = requireActivity().getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
         val token = sharedPreferences.getString("jwt", "") ?: ""
         userId = sharedPreferences.getLong("userId", -1)
         RetrofitInstance.setToken(token)
-        CacheService.initDatabase(
-            Room.databaseBuilder(
-                requireContext(),
-                ImageCacheDatabase::class.java,
-                "image-cache"
-            )
-                .allowMainThreadQueries()
-                .fallbackToDestructiveMigration()
-                .build()
-        )
 
         setupUsersRecyclerView()
         setupPendingRecyclerView()
@@ -159,7 +146,6 @@ class UsersFragment(private val userList: List<UserResponse>) : Fragment(R.layou
 
     private fun getFriendListSuccess(statusCode: Int, responseBody: List<Long>) {
         Log.d("FRIEND_LIST", "Successfully queried friendlist: $responseBody Status code: $statusCode")
-        // Lọc bỏ những user đã có trong friendlist và chính mình
         val filteredUserList = userList.filter { !responseBody.contains(it.id) && it.id != userId }
         usersRecyclerViewAdapter.addAll(filteredUserList)
     }

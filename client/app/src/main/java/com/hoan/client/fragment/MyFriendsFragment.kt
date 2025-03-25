@@ -10,11 +10,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.hoan.client.R
 import com.hoan.client.adapter.UsersRecyclerViewAdapter
-import com.hoan.client.database.ImageCacheDatabase
-import com.hoan.client.database.repository.CacheService
 import com.hoan.client.databinding.FragmentMyFriendsBinding
 import com.hoan.client.network.response.UserResponse
 import com.hoan.client.network.RetrofitInstance
@@ -42,16 +39,6 @@ class MyFriendsFragment : Fragment(R.layout.fragment_my_friends) {
         val token = sharedPreferences.getString("jwt", "") ?: ""
         userId = sharedPreferences.getLong("userId", -1)
         RetrofitInstance.setToken(token)
-        CacheService.initDatabase(
-            Room.databaseBuilder(
-                requireContext(),
-                ImageCacheDatabase::class.java,
-                "image-cache"
-            )
-                .allowMainThreadQueries()
-                .fallbackToDestructiveMigration()
-                .build()
-        )
 
         setupFriendsRecyclerView()
         return binding.root

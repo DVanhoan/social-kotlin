@@ -10,9 +10,8 @@ return new class extends Migration {
         Schema::create('reactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('username');
             $table->foreignId('post_id')->constrained('posts')->onDelete('cascade');
-            $table->string('image_name');
+            $table->enum('reaction_type', ['happy', 'sad', 'angry', 'wow', 'haha', 'love'])->default('happy');
             $table->timestamp('reaction_time')->useCurrent();
             $table->timestamps();
         });

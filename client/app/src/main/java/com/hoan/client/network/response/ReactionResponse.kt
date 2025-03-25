@@ -1,13 +1,25 @@
 package com.hoan.client.network.response
 
 import androidx.room.Entity
+import com.squareup.moshi.Json
 
 @Entity
 data class ReactionResponse(
+    @Json(name = "id")
     var id: Long,
+
+    @Json(name = "user_id")
     var userId: Long,
-    var username: String,
+
+    @Json(name = "post_id")
     var postId: Long,
+
+    @Json(name = "image_name")
     val imageName: String,
-    val reactionTime: String
+
+    @Json(name = "reaction_time")
+    val reactionTime: String,
+
+    @Json(name = "user")
+    var user: UserResponse?
 )

@@ -4,21 +4,22 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.hoan.client.database.repository.CacheService
 import com.hoan.client.databinding.ReactionItemBinding
 import com.hoan.client.network.response.ReactionResponse
+import com.squareup.picasso.Picasso
 
 class ReactionsRecyclerViewAdapter : RecyclerView.Adapter<ReactionsRecyclerViewAdapter.ReactionItemViewHolder>() {
 
     private val reactionList = mutableListOf<ReactionResponse>()
+    private val picasso: Picasso by lazy { Picasso.get() }
 
     inner class ReactionItemViewHolder(private val binding: ReactionItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(position: Int) {
             val reaction = reactionList[position]
-            binding.reactionUsername.text = reaction.username
+            binding.reactionUsername.text = reaction.user?.username
             binding.lateTime.text = reaction.reactionTime
-            CacheService.cacheReactionImage(reaction.imageName, binding.reactionProfilePicture)
+            picasso.load(reaction.user?.profilePicture).into(binding.reactionProfilePicture)
         }
     }
 

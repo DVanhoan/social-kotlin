@@ -26,7 +26,6 @@
         android:textColor="@color/light_grey"
         android:textStyle="bold" />
 
-    <!-- empty space that will fill "subtotal" and "price", using layout_weight -->
     <View
         android:layout_width="0dp"
         android:layout_height="1dp"
