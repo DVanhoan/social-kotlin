@@ -23,7 +23,6 @@ import com.hoan.client.adapter.PostsRecyclerViewAdapter
 import com.hoan.client.adapter.PostsRecyclerViewAdapter.ReactionListener
 import com.hoan.client.adapter.PostsRecyclerViewAdapter.SettingsListener
 import com.hoan.client.constant.Constants
-import com.hoan.client.constant.ImagePickType
 import com.hoan.client.databinding.FragmentListPostsBinding
 import com.hoan.client.network.RetrofitInstance
 import com.hoan.client.network.response.PostResponse
@@ -42,9 +41,8 @@ class ListPostsFragment(private var user: UserResponse) :
     private val binding get() = _binding!!
 
     private lateinit var sharedPreferences: SharedPreferences
+    private val sharedPrefName = "user_shared_preference"
     private lateinit var postsRecyclerViewAdapter: PostsRecyclerViewAdapter
-
-    private var currentPickType: ImagePickType? = null
 
     private lateinit var imagePicker: ImagePicker.Builder
 
@@ -74,8 +72,7 @@ class ListPostsFragment(private var user: UserResponse) :
     ): View {
         _binding = FragmentListPostsBinding.inflate(inflater, container, false)
 
-        sharedPreferences =
-            requireActivity().getSharedPreferences("user_shared_preference", Context.MODE_PRIVATE)
+        sharedPreferences = requireActivity().getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
         val token = sharedPreferences.getString("jwt", "") ?: ""
         RetrofitInstance.setToken(token)
 
@@ -199,13 +196,27 @@ class ListPostsFragment(private var user: UserResponse) :
     override fun reaction(postId: Long, position: Int) {
         reactionOnPostID = postId
         reactionPosition = position
-        currentPickType = ImagePickType.REACTION
+        val options = arrayOf("Thích", "Yêu thích", "Buồn", "Tức giận", "Ngạc nhiên")
 
-        imagePicker.cameraOnly().createIntent { pickImageLauncher.launch(it) }
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Chọn biểu cảm")
+            .setItems(options) { _, which ->
+                val reaction = when (which) {
+                    0 -> "like"
+                    1 -> "love"
+                    2 -> "sad"
+                    3 -> "angry"
+                    4 -> "surprised"
+                    else -> "like"
+                }
+                react(postId, position, reaction)
+            }
+            .show()
+
     }
 
-    private fun react(postId: Long, position: Int, reactionPart: MultipartBody.Part) {
-        RetrofitInstance.reactionService.react(reactionPart, postId)
+    private fun react(postId: Long, position: Int, reaction: String) {
+        RetrofitInstance.reactionService.react(reaction, postId)
             .enqueue(object : Callback<ReactionResponse> {
                 override fun onResponse(
                     call: Call<ReactionResponse>,
@@ -226,11 +237,6 @@ class ListPostsFragment(private var user: UserResponse) :
         reactionPosition = null
     }
 
-
-    fun updateUserDetails(user: UserResponse) {
-        this.user = user
-        postsRecyclerViewAdapter.updateUser(user)
-    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)

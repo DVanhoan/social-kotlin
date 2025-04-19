@@ -1,12 +1,14 @@
 package com.hoan.client
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.hoan.client.adapter.ConversationClickListener
 import com.hoan.client.adapter.ConversationRecyclerViewAdapter
 import com.hoan.client.databinding.ActivityConversationBinding
 import com.hoan.client.network.RetrofitInstance
@@ -36,7 +38,14 @@ class ConversationActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        conversationAdapter = ConversationRecyclerViewAdapter(emptyList())
+        conversationAdapter = ConversationRecyclerViewAdapter(emptyList(), object : ConversationClickListener {
+            override fun onClickConversation(conversation: com.hoan.client.network.response.ConversationItem) {
+                val intent = Intent(this@ConversationActivity, ActivityChat::class.java)
+                intent.putExtra("conversationId", conversation.id)
+                startActivity(intent)
+            }
+        })
+
         binding.recyclerViewConversations.apply {
             layoutManager = LinearLayoutManager(this@ConversationActivity)
             adapter = conversationAdapter
@@ -45,7 +54,7 @@ class ConversationActivity : AppCompatActivity() {
 
     private fun getConversations() {
         RetrofitInstance.messageService.getConversations().enqueue(object : Callback<ConversationsResponse> {
-                override fun onResponse(call: Call<ConversationsResponse>, response: Response<ConversationsResponse>) {
+            override fun onResponse(call: Call<ConversationsResponse>, response: Response<ConversationsResponse>) {
                 if (response.isSuccessful) {
                     response.body()?.let { conversationsResponse ->
                         val conversations = conversationsResponse.conversations

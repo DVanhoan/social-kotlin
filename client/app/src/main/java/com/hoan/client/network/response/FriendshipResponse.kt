@@ -1,9 +1,7 @@
 package com.hoan.client.network.response
 
-import androidx.room.Entity
 import com.squareup.moshi.Json
 
-@Entity
 data class FriendshipResponse(
     @Json(name = "id")
     var id: Long,

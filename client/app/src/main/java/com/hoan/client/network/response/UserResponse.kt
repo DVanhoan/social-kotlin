@@ -1,10 +1,8 @@
 package com.hoan.client.network.response
 
-import androidx.room.Entity
 import com.squareup.moshi.Json
 
 
-@Entity
 data class UserResponse(
     @Json(name = "id")
     var id: Long,

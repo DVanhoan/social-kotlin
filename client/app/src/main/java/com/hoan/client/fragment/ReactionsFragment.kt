@@ -48,20 +48,6 @@ class ReactionsFragment(
             requireActivity().findViewById<View>(R.id.toolbar).visibility = View.VISIBLE
         }
 
-        binding.commentsButton.setOnClickListener {
-            val fragment = CommentsFragment.newInstance(post, emptyList(), reactions)
-            setupRecyclerView()
-            goToComments(fragment, "COMMENTS")
-        }
-
-        picasso.load(post.user?.profilePicture).into(binding.userPost.commenterProfilePicture)
-
-
-
-        binding.userPost.commenterName.text = post.user?.username
-        binding.userPost.commentText.text = post.content
-        binding.userPost.lateTime.text = post.postingTime
-
         setupRecyclerView()
         getReactionsOnPost(post.id)
 
@@ -79,11 +65,6 @@ class ReactionsFragment(
         list.adapter = reactionsRecyclerViewAdapter
     }
 
-    private fun goToComments(fragment: Fragment, tag: String) {
-        requireActivity().supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container_view, fragment, tag)
-            .commit()
-    }
 
     private fun getReactionsOnPost(postId: Long) {
         RetrofitInstance.reactionService.getReactionsOnPost(postId)

@@ -8,7 +8,7 @@ import android.widget.EditText
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.hoan.client.R
-import com.hoan.client.databinding.UserItemBinding
+import com.hoan.client.databinding.ItemUserBinding
 import com.hoan.client.network.response.FriendshipResponse
 import com.hoan.client.network.response.UserResponse
 import com.hoan.client.network.RetrofitInstance
@@ -27,7 +27,7 @@ class UsersRecyclerViewAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
         val binding =
-            UserItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            ItemUserBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return UserViewHolder(binding)
     }
 
@@ -51,7 +51,7 @@ class UsersRecyclerViewAdapter(
 
     fun add(user: UserResponse) {
         this.userList.add(user)
-        notifyItemInserted(userList.size - 1)
+        notifyItemInserted(userList.size + 1)
     }
 
     fun remove(user: UserResponse) {
@@ -69,7 +69,7 @@ class UsersRecyclerViewAdapter(
         }
     }
 
-    inner class UserViewHolder(private val binding: UserItemBinding) :
+    inner class UserViewHolder(private val binding: ItemUserBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(position: Int) {
             val user = userList[position]

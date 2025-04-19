@@ -2,47 +2,83 @@ package com.hoan.client.adapter
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.hoan.client.databinding.ItemConversationBinding
-import com.hoan.client.network.response.ConversationItem
+import com.hoan.client.R
+import com.hoan.client.network.response.RecentMessages
+import com.squareup.picasso.Picasso
 
 class MessagesRecycleViewAdapter(
     private val context: Context,
-    private val list: List<ConversationItem>,
-    private val messageClickInterface: MessageOnClickInterface
-) : RecyclerView.Adapter<MessagesRecycleViewAdapter.ViewHolder>() {
+    private var messages: List<RecentMessages>,
+    private val currentUserId: Long
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    inner class ViewHolder(val binding: ItemConversationBinding) :
-        RecyclerView.ViewHolder(binding.root)
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(ItemConversationBinding.inflate(LayoutInflater.from(parent.context),
-            parent,
-            false))
+    companion object {
+        private const val VIEW_TYPE_LEFT = 0
+        private const val VIEW_TYPE_RIGHT = 1
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val currentItem = list[position]
-        holder.binding.tvConversationName.text = currentItem.name
-        holder.binding.tvLastMessage.text = currentItem.last_message
-
-        Glide
-            .with(context)
-            .load(currentItem.other_participant?.profile_picture)
-            .into(holder.binding.ivProfilePicture)
-
-        holder.itemView.setOnClickListener {
-            messageClickInterface.onClickMessage(currentItem)
+    override fun getItemViewType(position: Int): Int {
+        return if (messages[position].sender.id == currentUserId) {
+            VIEW_TYPE_RIGHT
+        } else {
+            VIEW_TYPE_LEFT
         }
     }
 
-    override fun getItemCount(): Int {
-        return list.size
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return if (viewType == VIEW_TYPE_RIGHT) {
+            val view = LayoutInflater.from(context)
+                .inflate(R.layout.item_message_right, parent, false)
+            RightMessageViewHolder(view)
+        } else {
+            val view = LayoutInflater.from(context)
+                .inflate(R.layout.item_message_left, parent, false)
+            LeftMessageViewHolder(view)
+        }
     }
-}
 
-interface MessageOnClickInterface {
-    fun onClickMessage(item: Message)
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val message = messages[position]
+        if (holder is RightMessageViewHolder) {
+            holder.bind(message)
+        } else if (holder is LeftMessageViewHolder) {
+            holder.bind(message)
+        }
+    }
+
+    override fun getItemCount(): Int = messages.size
+
+    fun updateMessages(newMessages: List<RecentMessages>) {
+        messages = newMessages
+        notifyDataSetChanged()
+    }
+
+    inner class LeftMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvMessage: TextView = itemView.findViewById(R.id.tv_message)
+        private val ivProfile: ImageView = itemView.findViewById(R.id.iv_profile_picture)
+        fun bind(message: RecentMessages) {
+            tvMessage.text = message.content
+            Picasso.get()
+                .load(message.sender.profilePicture)
+                .placeholder(R.drawable.icon)
+                .into(ivProfile)
+        }
+    }
+
+    inner class RightMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvMessage: TextView = itemView.findViewById(R.id.tv_message)
+        private val ivProfile: ImageView = itemView.findViewById(R.id.iv_profile_picture)
+        fun bind(message: RecentMessages) {
+            tvMessage.text = message.content
+            Picasso.get()
+                .load(message.sender.profilePicture)
+                .placeholder(R.drawable.icon)
+                .into(ivProfile)
+        }
+    }
 }

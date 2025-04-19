@@ -14,6 +14,7 @@ Route::prefix('v1')->group(function () {
     Route::prefix('users')->group(function () {
         Route::post('login', [UserController::class, 'login']);
         Route::post('register', [UserController::class, 'register']);
+        Route::post('refresh', [UserController::class, 'refresh']);
 
         Route::middleware('auth:api')->group(function () {
             Route::get('user/me', [UserController::class, 'me']);

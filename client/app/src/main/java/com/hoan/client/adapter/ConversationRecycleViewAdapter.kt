@@ -11,7 +11,8 @@ import com.hoan.client.network.response.ConversationItem
 import com.squareup.picasso.Picasso
 
 class ConversationRecyclerViewAdapter(
-    private var conversations: List<ConversationItem>
+    private var conversations: List<ConversationItem>,
+    private val conversationClickListener: ConversationClickListener
 ) : RecyclerView.Adapter<ConversationRecyclerViewAdapter.ConversationViewHolder>() {
 
     inner class ConversationViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -30,8 +31,8 @@ class ConversationRecyclerViewAdapter(
 
     override fun onBindViewHolder(holder: ConversationViewHolder, position: Int) {
         val conversation = conversations[position]
-        holder.tvConversationName.text = conversation.other_participant?.username ?: conversation.last_message
 
+        holder.tvConversationName.text = conversation.other_participant?.username ?: conversation.last_message
         holder.tvLastMessage.text = conversation.last_message ?: ""
 
         val profileUrl = conversation.other_participant?.profile_picture
@@ -43,10 +44,19 @@ class ConversationRecyclerViewAdapter(
         } else {
             holder.ivProfilePicture.setImageResource(R.drawable.icon)
         }
+
+
+        holder.itemView.setOnClickListener {
+            conversationClickListener.onClickConversation(conversation)
+        }
     }
 
     fun updateConversations(newConversations: List<ConversationItem>) {
         this.conversations = newConversations
         notifyDataSetChanged()
     }
+}
+
+interface ConversationClickListener {
+    fun onClickConversation(conversation: ConversationItem)
 }

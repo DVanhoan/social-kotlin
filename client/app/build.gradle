@@ -52,10 +52,6 @@ dependencies {
     implementation libs.okhttp
     implementation libs.moshi.kotlin
     implementation libs.converter.moshi
-    // Room
-    implementation libs.androidx.room.runtime
-    implementation libs.androidx.room.ktx
-    ksp libs.androidx.room.compiler
     // Pretty time
     implementation libs.prettytime
     // Glide

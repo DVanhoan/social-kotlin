@@ -18,14 +18,14 @@ import com.hoan.client.network.response.CommentResponse
 import com.hoan.client.network.response.PostResponse
 import com.hoan.client.network.response.ReactionResponse
 import com.hoan.client.network.RetrofitInstance
+import com.squareup.picasso.Picasso
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class CommentsFragment(
     private val post: PostResponse,
-    private val comments: List<CommentResponse>,
-    private val reactions: List<ReactionResponse>,
+    private val comments: List<CommentResponse>
 ) : Fragment(R.layout.fragment_comments) {
 
     private var _binding: FragmentCommentsBinding? = null
@@ -33,6 +33,7 @@ class CommentsFragment(
 
     private lateinit var sharedPreferences: SharedPreferences
     private val sharedPrefName = "user_shared_preference"
+    private val picasso: Picasso by lazy { Picasso.get() }
 
     private lateinit var commentsRecyclerViewAdapter: CommentsRecyclerViewAdapter
 
@@ -51,21 +52,6 @@ class CommentsFragment(
             requireActivity().findViewById<View>(R.id.toolbar).visibility = View.VISIBLE
         }
 
-        binding.reactionsButton.setOnClickListener {
-            val fragment = ReactionsFragment.newInstance(post, reactions)
-            goToReactions(fragment, "REACTIONS")
-        }
-
-
-        Glide.with(binding.userPost.commenterProfilePicture)
-            .load(post.user?.profilePicture)
-            .placeholder(android.R.color.holo_blue_light)
-            .into(binding.userPost.commenterProfilePicture)
-
-        binding.userPost.commenterName.text = post.user?.username
-        binding.userPost.commentText.text = post.content
-        binding.userPost.lateTime.text = post.postingTime
-
         binding.sendCommentButton.setOnClickListener {
             val commentText = binding.etAddComment.text.toString()
             sendComment(post.id, commentText)
@@ -77,13 +63,6 @@ class CommentsFragment(
         getCommentsOnPost(post.id)
 
         return binding.root
-    }
-
-    private fun goToReactions(fragment: Fragment, tag: String) {
-        requireActivity().supportFragmentManager
-            .beginTransaction()
-            .replace(R.id.fragment_container_view, fragment, tag)
-            .commit()
     }
 
     private fun setupRecyclerView() {
@@ -154,7 +133,6 @@ class CommentsFragment(
         fun newInstance(
             post: PostResponse,
             comments: List<CommentResponse>,
-            reactions: List<ReactionResponse>
-        ) = CommentsFragment(post, comments, reactions)
+        ) = CommentsFragment(post, comments)
     }
 }

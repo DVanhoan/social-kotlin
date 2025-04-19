@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.hoan.client.databinding.CommentItemBinding
+import com.hoan.client.databinding.ItemCommentBinding
 import com.hoan.client.network.response.CommentResponse
 
 class CommentsRecyclerViewAdapter : RecyclerView.Adapter<CommentsRecyclerViewAdapter.CommentItemViewHolder>() {
@@ -13,7 +13,7 @@ class CommentsRecyclerViewAdapter : RecyclerView.Adapter<CommentsRecyclerViewAda
     private val commentList = mutableListOf<CommentResponse>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CommentItemViewHolder {
-        val binding = CommentItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemCommentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return CommentItemViewHolder(binding)
     }
 
@@ -26,7 +26,7 @@ class CommentsRecyclerViewAdapter : RecyclerView.Adapter<CommentsRecyclerViewAda
 
     override fun getItemCount(): Int = commentList.size
 
-    inner class CommentItemViewHolder(private val binding: CommentItemBinding) :
+    inner class CommentItemViewHolder(private val binding: ItemCommentBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(position: Int) {
             val comment = commentList[position]

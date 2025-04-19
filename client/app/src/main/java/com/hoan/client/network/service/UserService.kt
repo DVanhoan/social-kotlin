@@ -19,6 +19,9 @@ interface UserService {
     @GET("users/user/me")
     fun getUser(): Call<UserResponse>
 
+    @POST("users/refresh")
+    fun refreshToken(): Call<JwtResponse>
+
     @POST("users/user")
     fun editUser(@Body userRequest: UserRequest): Call<UserResponse>
 

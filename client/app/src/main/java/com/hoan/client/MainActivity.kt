@@ -29,7 +29,10 @@ class MainActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             val sharedPreferences = getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
             val token = sharedPreferences.getString("jwt", null)
-            val intent = if (token.isNullOrEmpty()) {
+
+            val expirationTime = sharedPreferences.getLong("expiration_time", 0L)
+
+            val intent = if (token.isNullOrEmpty() || expirationTime < System.currentTimeMillis()) {
                 Intent(this, LoginActivity::class.java)
             } else {
                 Intent(this, FeedActivity::class.java)
@@ -37,5 +40,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }, 1500)
+
     }
 }

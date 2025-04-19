@@ -135,6 +135,7 @@ class ConversationController extends Controller
                     'profile_picture' => $message->sender->profile_picture,
                 ];
             }),
+
             'members' => $conversation->members->map(function ($member) {
                 return [
                     'id' => $member->user->id,

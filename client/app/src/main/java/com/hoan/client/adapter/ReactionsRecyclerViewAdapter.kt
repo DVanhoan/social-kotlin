@@ -4,7 +4,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.hoan.client.databinding.ReactionItemBinding
+import com.hoan.client.databinding.ItemReactionBinding
 import com.hoan.client.network.response.ReactionResponse
 import com.squareup.picasso.Picasso
 
@@ -13,7 +13,7 @@ class ReactionsRecyclerViewAdapter : RecyclerView.Adapter<ReactionsRecyclerViewA
     private val reactionList = mutableListOf<ReactionResponse>()
     private val picasso: Picasso by lazy { Picasso.get() }
 
-    inner class ReactionItemViewHolder(private val binding: ReactionItemBinding) :
+    inner class ReactionItemViewHolder(private val binding: ItemReactionBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(position: Int) {
             val reaction = reactionList[position]
@@ -24,7 +24,7 @@ class ReactionsRecyclerViewAdapter : RecyclerView.Adapter<ReactionsRecyclerViewA
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReactionItemViewHolder {
-        val binding = ReactionItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemReactionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ReactionItemViewHolder(binding)
     }
 

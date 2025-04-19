@@ -1,6 +1,7 @@
 package com.hoan.client
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +15,7 @@ import com.hoan.client.fragment.ProfileFragment
 import com.hoan.client.network.response.UserResponse
 import com.hoan.client.network.RetrofitInstance
 import com.hoan.client.fragment.EditProfileFragment
+import com.hoan.client.network.response.JwtResponse
 import com.squareup.picasso.Picasso
 import retrofit2.Call
 import retrofit2.Callback
@@ -25,7 +27,6 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var user: UserResponse
     private val sharedPrefName = "user_shared_preference"
-
     private val picasso: Picasso by lazy { Picasso.get() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,9 +36,7 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
 
         sharedPreferences = getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
         val token = sharedPreferences.getString("jwt", "") ?: ""
-
         RetrofitInstance.setToken(token)
-
         getUser()
 
         binding.toolbar.visibility = View.VISIBLE
@@ -53,7 +52,13 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
                     if (response.isSuccessful && response.body() != null) {
                         getUserSuccess(response.code(), response.body()!!)
                     } else {
-                        generalError(response.code(), Exception("Error retrieving user: ${response.message()}"))
+                        if(response.code() == 401) {
+                            refreshToken()
+                        } else {
+                            generalError(response.code(), Exception("Error retrieving user: ${response.message()}"))
+                            startActivity(Intent(this@FeedActivity, LoginActivity::class.java))
+                            finish()
+                        }
                     }
                 }
 
@@ -69,6 +74,41 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
         loadProfileData(user)
 
         loadUserList()
+    }
+
+    private fun refreshToken() {
+        RetrofitInstance.userService.refreshToken()
+            .enqueue(object : Callback<JwtResponse> {
+                override fun onResponse(
+                    call: Call<JwtResponse>,
+                    response: Response<JwtResponse>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        refreshTokenSuccess(response.code(), response.body()!!)
+                    } else {
+                        Log.e("REFRESH_TOKEN", "Refresh token failed: ${response.message()}")
+                        startActivity(Intent(this@FeedActivity, LoginActivity::class.java))
+                        finish()
+                    }
+                }
+
+                override fun onFailure(call: Call<JwtResponse>, t: Throwable) {
+                    generalError(500, t)
+                }
+            })
+    }
+
+    private fun refreshTokenSuccess(statusCode: Int, responseBody: JwtResponse) {
+        Log.d("REFRESH_TOKEN", "Refresh token success: $responseBody, Status code: $statusCode")
+        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+        editor.putString("jwt", responseBody.jwt)
+        val expirationTime = System.currentTimeMillis() + responseBody.expires_in.toLong() * 1000L
+        editor.putLong("expiration_time", expirationTime)
+        editor.apply()
+
+        RetrofitInstance.setToken(responseBody.jwt)
+
+        getUser()
     }
 
 
@@ -101,7 +141,6 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
 
         val fragment: Fragment = FriendFragment.newInstance(responseBody)
         binding.btnAddFriend.setOnClickListener {
-            findViewById<View>(R.id.toolbar).visibility = View.GONE
             addFullscreenFragment(fragment, "ADD_FRIENDS")
         }
     }
@@ -117,10 +156,21 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
     private fun replaceFragment(fragment: Fragment, tag: String) {
         Log.d("FRAGMENT", "Adding fragment ${fragment.id} with tag $tag")
         val fragmentManager = supportFragmentManager
-        val fragmentTransaction = fragmentManager.beginTransaction()
-        fragmentTransaction.replace(R.id.fragment_container_view, fragment, tag)
-        fragmentTransaction.addToBackStack(fragment.id.toString())
-        fragmentTransaction.commit()
+        val transaction = fragmentManager.beginTransaction()
+
+        fragmentManager.fragments.forEach {
+            transaction.hide(it)
+        }
+
+        val existingFragment = fragmentManager.findFragmentByTag(tag)
+        if (existingFragment != null) {
+            transaction.show(existingFragment)
+        } else {
+            transaction.add(R.id.fragment_container_view, fragment, tag)
+        }
+
+        transaction.addToBackStack(tag)
+        transaction.commit()
     }
 
     private fun addFullscreenFragment(fragment: Fragment, tag: String) {
@@ -136,6 +186,4 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
     override fun updateUserDetails(user: UserResponse) {
         loadProfileData(user)
     }
-
-    fun getCurrentUser(): UserResponse = user
 }

@@ -9,9 +9,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.hoan.client" />
-                  <option name="mobileSdkAppId" value="1:732301141902:android:0fc77dc3d1be38154ea6df" />
-                  <option name="projectId" value="social-app-88059" />
-                  <option name="projectNumber" value="732301141902" />
+                  <option name="mobileSdkAppId" value="1:347138059798:android:993207998a865d02754f37" />
+                  <option name="projectId" value="myapp-475c7" />
+                  <option name="projectNumber" value="347138059798" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

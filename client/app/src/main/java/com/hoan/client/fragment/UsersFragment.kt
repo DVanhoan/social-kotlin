@@ -13,7 +13,6 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.hoan.client.R
 import com.hoan.client.adapter.UsersRecyclerViewAdapter
 import com.hoan.client.databinding.FragmentUsersBinding

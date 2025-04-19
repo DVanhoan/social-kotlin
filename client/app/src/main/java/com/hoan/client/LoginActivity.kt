@@ -127,8 +127,12 @@ class LoginActivity : AppCompatActivity() {
         editor.putString("username", jwtResponse.user?.username)
         editor.putString("email", jwtResponse.user?.email)
         editor.putString("jwt", jwtResponse.jwt)
+
+        val expirationTime = System.currentTimeMillis() + jwtResponse.expires_in.toLong() * 1000L
+        editor.putLong("expiration_time", expirationTime)
         editor.apply()
     }
+
 
     private fun loginError(statusCode: Int, e: Throwable) {
         val errorMessage = when (statusCode) {
