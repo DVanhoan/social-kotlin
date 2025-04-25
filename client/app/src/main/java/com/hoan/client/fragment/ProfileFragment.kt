@@ -60,6 +60,7 @@ class ProfileFragment(
             editor.remove("username")
             editor.remove("email")
             editor.remove("jwt")
+            editor.remove("expiration_time")
             editor.apply()
             val intent = Intent(requireActivity(), LoginActivity::class.java)
             requireActivity().finish()

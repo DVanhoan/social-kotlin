@@ -55,7 +55,7 @@
                             <td>{{ $post->id }}</td>
                             <td class="pname">
                                 <div class="image">
-                                    <img src="{{ secure_asset($post->main_photo) }}" alt="Post image" class="image"
+                                    <img src="{{ asset($post->main_photo) }}" alt="Post image" class="image"
                                         style="max-width: 80px;">
                                 </div>
                                 <div class="name">

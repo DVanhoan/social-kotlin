@@ -40,7 +40,7 @@ class ConversationActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         conversationAdapter = ConversationRecyclerViewAdapter(emptyList(), object : ConversationClickListener {
             override fun onClickConversation(conversation: com.hoan.client.network.response.ConversationItem) {
-                val intent = Intent(this@ConversationActivity, ActivityChat::class.java)
+//                val intent = Intent(this@ConversationActivity, ActivityChat::class.java)
                 intent.putExtra("conversationId", conversation.id)
                 startActivity(intent)
             }

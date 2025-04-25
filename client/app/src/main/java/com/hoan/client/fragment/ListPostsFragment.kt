@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,7 +29,6 @@ import com.hoan.client.network.RetrofitInstance
 import com.hoan.client.network.response.PostResponse
 import com.hoan.client.network.response.ReactionResponse
 import com.hoan.client.network.response.UserResponse
-import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -91,6 +91,8 @@ class ListPostsFragment(private var user: UserResponse) :
 
 
         binding.btnImage.setOnClickListener {
+            Toast.makeText(requireContext(), "Chọn ảnh", Toast.LENGTH_SHORT).show()
+
             if (!checkPermissions()) return@setOnClickListener
 
             val options = arrayOf("Chụp ảnh", "Chọn ảnh từ thư viện")

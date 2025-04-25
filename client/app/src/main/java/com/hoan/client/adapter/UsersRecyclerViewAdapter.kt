@@ -99,11 +99,16 @@ class UsersRecyclerViewAdapter(
                 ListType.PENDING -> {
                     binding.confirmAddButton.visibility = View.VISIBLE
                     binding.removeFriendButton.visibility = View.GONE
-                    binding.confirmAddButton.text =
-                        binding.root.context.getString(R.string.confirm)
-                    binding.confirmAddButton.setOnClickListener { acceptFriendRequest(user.id) }
-                    // Nếu có nút "reject" trong layout, xử lý tại đây
+
+                    if (user.isOutgoing) {
+                        binding.confirmAddButton.text = "Đã gửi"
+                        binding.confirmAddButton.isEnabled = false
+                    } else {
+                        binding.confirmAddButton.text = "Xác nhận"
+                        binding.confirmAddButton.setOnClickListener { acceptFriendRequest(user.id) }
+                    }
                 }
+
                 ListType.FRIEND -> {
                     binding.confirmAddButton.visibility = View.GONE
                     binding.removeFriendButton.visibility = View.VISIBLE

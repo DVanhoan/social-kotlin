@@ -1,7 +1,7 @@
 <div class="section-menu-left">
     <div class="box-logo">
         <a href="{{route('admin')}}" id="site-logo-inner">
-            <img class="" id="logo_header_1" alt="" src="{{ secure_asset('images/logo/logo.png') }}">
+            <img class="" id="logo_header_1" alt="" src="{{ asset('images/logo/logo.png') }}">
         </a>
         <div class="button-show-hide">
             <i class="icon-menu-left"></i>

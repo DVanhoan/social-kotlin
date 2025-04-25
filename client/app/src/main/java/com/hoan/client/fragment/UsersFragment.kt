@@ -164,25 +164,42 @@ class UsersFragment(private val userList: List<UserResponse>) : Fragment(R.layou
         })
     }
 
-    private fun getPendingRequestsSuccess(statusCode: Int, responseBody: List<FriendshipResponse>) {
-        Log.d("PENDING_REQUESTS", "Successfully queried pending requests: $responseBody Status code: $statusCode")
-        val friendships = responseBody
+    private fun getPendingRequestsSuccess(
+        statusCode: Int,
+        friendships: List<FriendshipResponse>
+    ) {
 
-        val incoming = friendships.filter { it.user1Id != userId }
-        val outgoing = friendships.filter { it.user2Id != userId }
+        val incomingIds = friendships
+            .filter { it.user2Id == userId }
+            .map    { it.user1Id }
+        val outgoingIds = friendships
+            .filter { it.user1Id == userId }
+            .map    { it.user2Id }
 
-        incoming.forEach {
-            getUserByUserId(it.user1Id, this::getIncomingRequestUsersSuccess)
-            binding.friendRequests.visibility = View.VISIBLE
-            binding.pendingListRecyclerView.visibility = View.VISIBLE
+
+        incomingIds.forEach { uid ->
+            userList.find { it.id == uid }?.let { user ->
+                pendingRecyclerViewAdapter.add(user)
+                usersRecyclerViewAdapter.remove(user)
+            }
         }
 
-        outgoing.forEach {
-            getUserByUserId(it.user2Id, this::getOutgoingRequestUsersSuccess)
+
+        outgoingIds.forEach { uid ->
+            userList.find { it.id == uid }?.let { user ->
+                user.isOutgoing = true
+                pendingRecyclerViewAdapter.add(user)
+                usersRecyclerViewAdapter.remove(user)
+            }
+        }
+
+
+        if (incomingIds.isNotEmpty() || outgoingIds.isNotEmpty()) {
             binding.friendRequests.visibility = View.VISIBLE
             binding.pendingListRecyclerView.visibility = View.VISIBLE
         }
     }
+
 
     private fun getUserByUserId(userId: Long, onSuccess: (Int, UserResponse) -> Unit) {
         RetrofitInstance.userService.getUserByUserId(userId).enqueue(object : Callback<UserResponse> {

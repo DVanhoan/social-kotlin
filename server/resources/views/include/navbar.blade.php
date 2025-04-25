@@ -2,9 +2,9 @@
     <div class="wrap">
         <div class="header-left">
             <a href="index-2.html">
-                <img class="" id="logo_header_mobile" alt="" src="{{ secure_asset('images/logo.png') }}"
-                    data-light="{{ secure_asset('images/logo.png') }}" data-dark="{{ secure_asset('images/logo.png') }}"
-                    data-width="154px" data-height="52px" data-retina="{{ secure_asset('images/logo/logo.png') }}">
+                <img class="" id="logo_header_mobile" alt="" src="{{ asset('images/logo.png') }}"
+                    data-light="{{ asset('images/logo.png') }}" data-dark="{{ asset('images/logo.png') }}"
+                    data-width="154px" data-height="52px" data-retina="{{ asset('images/logo/log.png') }}">
             </a>
             <div class="button-show-hide">
                 <i class="icon-menu-left"></i>
@@ -14,14 +14,15 @@
         <div class="header-grid">
             <div class="popup-wrap message type-header">
                 <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton2"
-                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-secondary dropdown-toggle" type="button"
+                            id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="header-item">
                             <span class="text-tiny">1</span>
                             <i class="icon-bell"></i>
                         </span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end has-content" aria-labelledby="dropdownMenuButton2">
+                    <ul class="dropdown-menu dropdown-menu-end has-content"
+                        aria-labelledby="dropdownMenuButton2">
                         <li>
                             <h6>Notifications</h6>
                         </li>
@@ -81,8 +82,8 @@
 
             <div class="popup-wrap user type-header">
                 <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton3"
-                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-secondary dropdown-toggle" type="button"
+                            id="dropdownMenuButton3" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="header-user wg-user">
                             <span class="image">
                                 <img src="" alt="">
@@ -93,7 +94,8 @@
                             </span>
                         </span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end has-content" aria-labelledby="dropdownMenuButton3">
+                    <ul class="dropdown-menu dropdown-menu-end has-content"
+                        aria-labelledby="dropdownMenuButton3">
                         <li>
                             <a href="#" class="user-item">
                                 <div class="icon">
