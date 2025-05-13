@@ -21,7 +21,7 @@ class Conversation extends Model
 
     public function messages()
     {
-        return $this->hasMany(Message::class)->latest('created_at');
+        return $this->hasMany(Message::class);
     }
 
     public function users()

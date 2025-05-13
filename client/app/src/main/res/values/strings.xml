@@ -7,6 +7,7 @@
     <string name="title_users">Users</string>
     <string name="title_settings">Settings</string>
     <string name="title_profile">Profile</string>
+    <string name="title_search">Search</string>
     <string name="title_chat">Chat</string>
     <string name="usernameOrEmail">usernameOrEmail</string>
     <string name="username">username</string>
@@ -29,7 +30,7 @@
     <string name="error">ERROR! Something unexpected happened</string>
     <string name="success">SUCCESS</string>
     <string name="success_sign">Đăng nhập thành công</string>
-
+    <string name="enter_message">Nhập tin nhắn...</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="post_new_befake">Post a BeFake</string>
     <string name="posted_ago">23min late</string>
@@ -64,6 +65,7 @@
     <string name="confirm">xác nhận</string>
     <string name="remove_friend_button">xóa kết bạn</string>
     <string name="friend_requests">yêu cầu kết bạn</string>
+    <string name="notification_title">Thông báo</string>
     <string name="friend_list">Bạn bè</string>
     <string name="no_friends_message">Search for friends so you can share your moments with them!</string>
     <string name="reactions">Cảm xúc</string>
@@ -75,10 +77,21 @@
     <string name="send">Gửi</string>
     <string name="add_comment">Thêm bình luận...</string>
     <string name="create_post">Tạo bài viết mới</string>
+    <string name="message_title">Tin nhắn</string>
     <string name="back">trở về</string>
     <string name="whats_on_your_mind">bạn đang nghĩ gì?</string>
     <string name="live_video">live video</string>
     <string name="photo_video">picture video\n</string>
     <string name="reel">reel video\n</string>
     <string name="search_conversation">tìm kiếm...</string>
+    <string name="remove_button">Xóa</string>
+    <string name="notification_lorem">Thông báo: Abc vừa gửi cho bạn tin nhắn</string>
+    <string name="clear_image">xóa\n</string>
+    <string name="hint_image_preview">bạn đã chọn ảnh</string>
+    <string name="react_like">like\n</string>
+    <string name="react_love">love\n</string>
+    <string name="react_haha">haha\n</string>
+    <string name="react_sad">sad</string>
+    <string name="react_tired">tired</string>
+    <string name="pending">đã gửi</string>
 </resources>

@@ -14,7 +14,6 @@ import com.squareup.picasso.Picasso
 class MessagesRecycleViewAdapter(
     private val context: Context,
     private var messages: List<RecentMessages>,
-    private val currentUserId: Long
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -23,21 +22,19 @@ class MessagesRecycleViewAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (messages[position].sender.id == currentUserId) {
-            VIEW_TYPE_RIGHT
-        } else {
-            VIEW_TYPE_LEFT
-        }
+        return if (messages[position].isSender) VIEW_TYPE_RIGHT
+        else VIEW_TYPE_LEFT
     }
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == VIEW_TYPE_RIGHT) {
             val view = LayoutInflater.from(context)
-                .inflate(R.layout.item_message_right, parent, false)
+                .inflate(R.layout.list_item_message_sent, parent, false)
             RightMessageViewHolder(view)
         } else {
             val view = LayoutInflater.from(context)
-                .inflate(R.layout.item_message_left, parent, false)
+                .inflate(R.layout.list_item_message_received, parent, false)
             LeftMessageViewHolder(view)
         }
     }
@@ -60,24 +57,64 @@ class MessagesRecycleViewAdapter(
 
     inner class LeftMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvMessage: TextView = itemView.findViewById(R.id.tv_message)
+        private val ivImage: ImageView = itemView.findViewById(R.id.iv_message_image)
         private val ivProfile: ImageView = itemView.findViewById(R.id.iv_profile_picture)
         fun bind(message: RecentMessages) {
-            tvMessage.text = message.content
+            // text
+            if (!message.content.isNullOrBlank()) {
+                tvMessage.visibility = View.VISIBLE
+                tvMessage.text = message.content
+            } else {
+                tvMessage.visibility = View.GONE
+            }
+
+            // image
+            if (message.image_url.toString() != "null") {
+                ivImage.visibility = View.VISIBLE
+                Picasso.get()
+                    .load(message.image_url)
+                    .into(ivImage)
+            } else {
+                Picasso.get().cancelRequest(ivImage)
+                ivImage.setImageDrawable(null)
+                ivImage.visibility = View.GONE
+            }
+
+
             Picasso.get()
                 .load(message.sender.profilePicture)
-                .placeholder(R.drawable.icon)
+                .placeholder(R.drawable.profile_placeholder)
                 .into(ivProfile)
         }
     }
 
     inner class RightMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvMessage: TextView = itemView.findViewById(R.id.tv_message)
+        private val ivImage: ImageView = itemView.findViewById(R.id.iv_message_image)
         private val ivProfile: ImageView = itemView.findViewById(R.id.iv_profile_picture)
         fun bind(message: RecentMessages) {
-            tvMessage.text = message.content
+            // text
+            if (!message.content.isNullOrBlank()) {
+                tvMessage.visibility = View.VISIBLE
+                tvMessage.text = message.content
+            } else {
+                tvMessage.visibility = View.GONE
+            }
+
+            // image
+            if (message.image_url.toString() != "null") {
+                ivImage.visibility = View.VISIBLE
+                Picasso.get()
+                    .load(message.image_url)
+                    .into(ivImage)
+            } else {
+                Picasso.get().cancelRequest(ivImage)
+                ivImage.setImageDrawable(null)
+                ivImage.visibility = View.GONE
+            }
             Picasso.get()
                 .load(message.sender.profilePicture)
-                .placeholder(R.drawable.icon)
+                .placeholder(R.drawable.profile_placeholder)
                 .into(ivProfile)
         }
     }

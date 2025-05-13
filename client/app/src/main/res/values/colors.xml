@@ -17,4 +17,14 @@
     <color name="transparent">#00000000</color>
     <color name="green">#0AAB50</color>
     <color name="lightGray">#F5F5F5</color>
+    <color name="hint_color">#808080</color>
+
+    <!-- Background của bottom nav -->
+    <color name="bottom_nav_background">#1E1E1E</color>
+    <!-- Icon/Text khi được chọn -->
+    <color name="bottom_nav_active">#FFFFFF</color>
+    <!-- Icon/Text khi không chọn -->
+    <color name="bottom_nav_inactive">#80FFFFFF</color>
+    <!-- Màu ripple khi bấm -->
+    <color name="bottom_nav_ripple">#33FFFFFF</color>
 </resources>

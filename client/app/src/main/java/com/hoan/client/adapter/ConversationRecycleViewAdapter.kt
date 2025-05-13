@@ -1,21 +1,18 @@
 package com.hoan.client.adapter
 
+import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.hoan.client.MessageActivity
 import com.hoan.client.R
-import com.hoan.client.adapter.CommentsRecyclerViewAdapter.CommentItemViewHolder
 import com.hoan.client.databinding.ItemConversationBinding
 import com.hoan.client.network.response.ConversationItem
-import com.squareup.picasso.Picasso
 
 class ConversationRecyclerViewAdapter(
-    private var conversations: List<ConversationItem>,
-    private val conversationClickListener: ConversationClickListener
+    private var conversations: List<ConversationItem>
 ) : RecyclerView.Adapter<ConversationRecyclerViewAdapter.ConversationViewHolder>()  {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConversationViewHolder {
@@ -27,6 +24,14 @@ class ConversationRecyclerViewAdapter(
         holder.bind(position)
         holder.itemView.setOnClickListener {
             Log.d("POSITION", position.toString())
+
+            val conversation = conversations[position]
+
+            val intent = Intent(holder.itemView.context, MessageActivity::class.java)
+
+            intent.putExtra("conversationId", conversation.id.toLong())
+
+            holder.itemView.context.startActivity(intent)
         }
     }
 
@@ -41,12 +46,13 @@ class ConversationRecyclerViewAdapter(
 
             Glide.with(binding.ivProfilePicture)
                 .load(conversation.other_participant?.profile_picture)
-                .placeholder(android.R.color.holo_blue_light)
+                .placeholder(R.drawable.profile_placeholder)
+                .error(R.drawable.profile_placeholder)
+                .circleCrop()
                 .into(binding.ivProfilePicture)
+
         }
     }
-
-
 
     override fun getItemCount(): Int = conversations.size
 
@@ -56,8 +62,4 @@ class ConversationRecyclerViewAdapter(
         this.conversations = newConversations
         notifyDataSetChanged()
     }
-}
-
-interface ConversationClickListener {
-    fun onClickConversation(conversation: ConversationItem)
 }

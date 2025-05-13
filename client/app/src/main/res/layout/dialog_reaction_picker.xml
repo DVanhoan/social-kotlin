@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ll_reactions"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:background="@drawable/bg_dialog_rounded">
+
+    <ImageButton
+        android:id="@+id/btn_react_like"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_like"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/react_like"
+        android:layout_margin="4dp"/>
+
+    <ImageButton
+        android:id="@+id/btn_react_love"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_love"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/react_love"
+        android:layout_margin="4dp"/>
+
+
+    <ImageButton
+        android:id="@+id/btn_react_haha"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_haha"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/react_haha"
+        android:layout_margin="4dp"/>
+    <ImageButton
+        android:id="@+id/btn_react_sad"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_sad"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/react_sad"
+        android:layout_margin="4dp"/>
+
+    <ImageButton
+        android:id="@+id/btn_react_tired"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_tired"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/react_tired"
+        android:layout_margin="4dp"/>
+
+</LinearLayout>

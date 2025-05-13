@@ -1,5 +1,6 @@
 package com.hoan.client.network.response
 
+import com.google.gson.annotations.SerializedName
 import com.squareup.moshi.Json
 
 data class PostResponse(
@@ -22,6 +23,10 @@ data class PostResponse(
     val deleted: Boolean,
 
     @Json(name = "user")
-    var user: UserResponse?
+    var user: UserResponse?,
+
+    @SerializedName("reactionCount") val reactionCount: Int,
+    @SerializedName("commentCount")  val commentCount: Int,
+    @SerializedName("userReaction")  val userReaction: String?
 )
 

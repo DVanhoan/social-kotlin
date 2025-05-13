@@ -44,16 +44,6 @@ class MyFriendsFragment : Fragment(R.layout.fragment_my_friends) {
         return binding.root
     }
 
-    override fun onResume() {
-        super.onResume()
-        requireActivity().findViewById<View>(R.id.toolbar).visibility = View.GONE
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        requireActivity().findViewById<View>(R.id.toolbar).visibility = View.VISIBLE
-    }
-
     private fun setupFriendsRecyclerView() {
         val llm = LinearLayoutManager(context).apply {
             orientation = LinearLayoutManager.VERTICAL

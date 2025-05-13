@@ -43,11 +43,6 @@ class ReactionsFragment(
         val token = sharedPreferences.getString("jwt", "") ?: ""
         RetrofitInstance.setToken(token)
 
-        binding.backButton.setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
-            requireActivity().findViewById<View>(R.id.toolbar).visibility = View.VISIBLE
-        }
-
         setupRecyclerView()
         getReactionsOnPost(post.id)
 

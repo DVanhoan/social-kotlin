@@ -1,40 +1,27 @@
 package com.hoan.client.fragment
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
+import android.view.*
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.hoan.client.R
 import com.hoan.client.adapter.CommentsRecyclerViewAdapter
 import com.hoan.client.databinding.FragmentCommentsBinding
-import com.hoan.client.network.response.CommentResponse
 import com.hoan.client.network.response.PostResponse
-import com.hoan.client.network.response.ReactionResponse
-import com.hoan.client.network.RetrofitInstance
-import com.squareup.picasso.Picasso
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.hoan.client.viewmodel.CommentsViewModel
 
 class CommentsFragment(
-    private val post: PostResponse,
-    private val comments: List<CommentResponse>
+    private val post: PostResponse
 ) : Fragment(R.layout.fragment_comments) {
 
     private var _binding: FragmentCommentsBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var sharedPreferences: SharedPreferences
-    private val sharedPrefName = "user_shared_preference"
-    private val picasso: Picasso by lazy { Picasso.get() }
-
+    private val viewModel: CommentsViewModel by viewModels()
     private lateinit var commentsRecyclerViewAdapter: CommentsRecyclerViewAdapter
 
     override fun onCreateView(
@@ -43,96 +30,51 @@ class CommentsFragment(
     ): View {
         _binding = FragmentCommentsBinding.inflate(inflater, container, false)
 
-        sharedPreferences = requireActivity().getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
-        val token = sharedPreferences.getString("jwt", "") ?: ""
-        RetrofitInstance.setToken(token)
 
         binding.backButton.setOnClickListener {
             requireActivity().supportFragmentManager.popBackStack()
-            requireActivity().findViewById<View>(R.id.toolbar).visibility = View.VISIBLE
         }
+
+
+        commentsRecyclerViewAdapter = CommentsRecyclerViewAdapter()
+        binding.commentsRecyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = commentsRecyclerViewAdapter
+        }
+
+
+        viewModel.comments.observe(viewLifecycleOwner, Observer { list ->
+            commentsRecyclerViewAdapter.reloadComments(list)
+        })
+        viewModel.error.observe(viewLifecycleOwner, Observer { err ->
+            err?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                Log.e("CommentsFragment", it)
+            }
+        })
+
 
         binding.sendCommentButton.setOnClickListener {
-            val commentText = binding.etAddComment.text.toString()
-            sendComment(post.id, commentText)
-            binding.etAddComment.setText("")
-            binding.etAddComment.clearFocus()
+            val txt = binding.etAddComment.text.toString().trim()
+            if (txt.isNotEmpty()) {
+                viewModel.postComment(post.id, txt)
+                binding.etAddComment.setText("")
+                binding.etAddComment.clearFocus()
+            }
         }
 
-        setupRecyclerView()
-        getCommentsOnPost(post.id)
+        viewModel.loadComments(post.id)
 
         return binding.root
     }
 
-    private fun setupRecyclerView() {
-        val llm = LinearLayoutManager(context).apply {
-            orientation = LinearLayoutManager.VERTICAL
-        }
-        commentsRecyclerViewAdapter = CommentsRecyclerViewAdapter()
-        commentsRecyclerViewAdapter.reloadComments(comments)
-        val list = binding.root.findViewById<RecyclerView>(R.id.comments_recycler_view)
-        list.layoutManager = llm
-        list.adapter = commentsRecyclerViewAdapter
-    }
-
-    private fun getCommentsOnPost(postId: Long) {
-        RetrofitInstance.commentService.getCommentsOnPost(postId)
-            .enqueue(object : Callback<List<CommentResponse>> {
-                override fun onResponse(
-                    call: Call<List<CommentResponse>>,
-                    response: Response<List<CommentResponse>>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        getCommentsOnPostSuccess(response.code(), response.body()!!)
-                    } else {
-                        generalError(response.code(), Exception("Error getting comments: ${response.message()}"))
-                    }
-                }
-                override fun onFailure(call: Call<List<CommentResponse>>, t: Throwable) {
-                    generalError(500, t)
-                }
-            })
-    }
-
-    private fun getCommentsOnPostSuccess(statusCode: Int, responseBody: List<CommentResponse>) {
-        Log.d("GET_COMMENTS_ON_POST", "Successfully got comments: $responseBody Status code: $statusCode")
-        if (responseBody.isNotEmpty()) {
-            commentsRecyclerViewAdapter.reloadComments(responseBody)
-        }
-    }
-
-    private fun sendComment(postId: Long, comment: String) {
-        RetrofitInstance.commentService.comment(comment, postId)
-            .enqueue(object : Callback<CommentResponse> {
-                override fun onResponse(call: Call<CommentResponse>, response: Response<CommentResponse>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        onCommentSuccess(response.code(), response.body()!!)
-                    } else {
-                        generalError(response.code(), Exception("Error posting comment: ${response.message()}"))
-                    }
-                }
-                override fun onFailure(call: Call<CommentResponse>, t: Throwable) {
-                    generalError(500, t)
-                }
-            })
-    }
-
-    private fun onCommentSuccess(statusCode: Int, responseBody: CommentResponse) {
-        Log.d("COMMENT_SUCCESSFUL", "Status code: $statusCode")
-        commentsRecyclerViewAdapter.addComment(responseBody)
-    }
-
-    private fun generalError(statusCode: Int, e: Throwable) {
-        Log.e("API_CALL_ERROR", "Error $statusCode during API call")
-        e.printStackTrace()
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     companion object {
         @JvmStatic
-        fun newInstance(
-            post: PostResponse,
-            comments: List<CommentResponse>,
-        ) = CommentsFragment(post, comments)
+        fun newInstance(post: PostResponse) = CommentsFragment(post)
     }
 }

@@ -79,7 +79,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.logo.setOnClickListener {
-            login("hoan@gmail.com", "Hoan1234")
+            login("nguyen@gmail.com", "Nguyen1234")
         }
     }
 
@@ -123,9 +123,9 @@ class LoginActivity : AppCompatActivity() {
 
     private fun saveUserDetails(jwtResponse: JwtResponse) {
         val editor: SharedPreferences.Editor = sharedPreferences.edit()
-        editor.putLong("userId", jwtResponse.user?.id ?: 0L)
-        editor.putString("username", jwtResponse.user?.username)
-        editor.putString("email", jwtResponse.user?.email)
+        editor.putLong("userId", jwtResponse.user.id)
+        editor.putString("username", jwtResponse.user.username)
+        editor.putString("email", jwtResponse.user.email)
         editor.putString("jwt", jwtResponse.jwt)
 
         val expirationTime = System.currentTimeMillis() + jwtResponse.expires_in.toLong() * 1000L

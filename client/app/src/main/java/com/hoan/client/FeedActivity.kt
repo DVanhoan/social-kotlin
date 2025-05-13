@@ -1,5 +1,6 @@
 package com.hoan.client
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -9,13 +10,10 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.hoan.client.databinding.ActivityFeedBinding
-import com.hoan.client.fragment.FriendFragment
-import com.hoan.client.fragment.ListPostsFragment
-import com.hoan.client.fragment.ProfileFragment
-import com.hoan.client.network.response.UserResponse
+import com.hoan.client.fragment.*
 import com.hoan.client.network.RetrofitInstance
-import com.hoan.client.fragment.EditProfileFragment
 import com.hoan.client.network.response.JwtResponse
+import com.hoan.client.network.response.UserResponse
 import com.squareup.picasso.Picasso
 import retrofit2.Call
 import retrofit2.Callback
@@ -26,6 +24,7 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
     private lateinit var binding: ActivityFeedBinding
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var user: UserResponse
+    private var userList: List<UserResponse> = emptyList()
     private val sharedPrefName = "user_shared_preference"
     private val picasso: Picasso by lazy { Picasso.get() }
 
@@ -34,85 +33,118 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
         binding = ActivityFeedBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
         sharedPreferences = getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
-        val token = sharedPreferences.getString("jwt", "") ?: ""
-        RetrofitInstance.setToken(token)
-        getUser()
+        RetrofitInstance.setToken(sharedPreferences.getString("jwt", "") ?: "")
 
-        binding.toolbar.visibility = View.VISIBLE
+        setupBottomNavigation()
+
+
+        getUser()
     }
 
-    private fun getUser() {
-        RetrofitInstance.userService.getUser()
-            .enqueue(object : Callback<UserResponse> {
-                override fun onResponse(
-                    call: Call<UserResponse>,
-                    response: Response<UserResponse>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        getUserSuccess(response.code(), response.body()!!)
-                    } else {
-                        if(response.code() == 401) {
-                            refreshToken()
-                        } else {
-                            generalError(response.code(), Exception("Error retrieving user: ${response.message()}"))
-                            startActivity(Intent(this@FeedActivity, LoginActivity::class.java))
-                            finish()
+
+    private fun setupBottomNavigation() {
+        binding.bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.navigation_home -> {
+                    replaceFragment(ListPostsFragment.newInstance(user), TAG_HOME)
+                    true
+                }
+                R.id.navigation_search -> {
+                    if (userList.isEmpty()) {
+                        loadUserList { success ->
+                            if (success) {
+                                replaceFragment(FriendFragment.newInstance(userList), TAG_SEARCH)
+                            }
                         }
-                    }
-                }
-
-                override fun onFailure(call: Call<UserResponse>, t: Throwable) {
-                    generalError(500, t)
-                }
-            })
-    }
-
-    private fun getUserSuccess(statusCode: Int, responseBody: UserResponse) {
-        Log.d("GET_USER", "Successfully queried user: $responseBody Status code: $statusCode")
-        user = responseBody
-        loadProfileData(user)
-
-        loadUserList()
-    }
-
-    private fun refreshToken() {
-        RetrofitInstance.userService.refreshToken()
-            .enqueue(object : Callback<JwtResponse> {
-                override fun onResponse(
-                    call: Call<JwtResponse>,
-                    response: Response<JwtResponse>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        refreshTokenSuccess(response.code(), response.body()!!)
                     } else {
-                        Log.e("REFRESH_TOKEN", "Refresh token failed: ${response.message()}")
-                        startActivity(Intent(this@FeedActivity, LoginActivity::class.java))
-                        finish()
+                        replaceFragment(FriendFragment.newInstance(userList), TAG_SEARCH)
                     }
+                    true
                 }
-
-                override fun onFailure(call: Call<JwtResponse>, t: Throwable) {
-                    generalError(500, t)
+                R.id.navigation_chats -> {
+                    replaceFragment(ChatFragment.newInstance(), TAG_CHATS)
+                    true
                 }
-            })
+                R.id.navigation_notifications -> {
+                    replaceFragment(NotificationFragment.newInstance(), TAG_NOTIFS)
+                    true
+                }
+                R.id.navigation_profile -> {
+                    if (::user.isInitialized) {
+                        replaceFragment(ProfileFragment.newInstance(user), TAG_PROFILE)
+                    } else {
+                        getUser()
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
     }
 
-    private fun refreshTokenSuccess(statusCode: Int, responseBody: JwtResponse) {
-        Log.d("REFRESH_TOKEN", "Refresh token success: $responseBody, Status code: $statusCode")
-        val editor: SharedPreferences.Editor = sharedPreferences.edit()
-        editor.putString("jwt", responseBody.jwt)
-        val expirationTime = System.currentTimeMillis() + responseBody.expires_in.toLong() * 1000L
-        editor.putLong("expiration_time", expirationTime)
-        editor.apply()
 
-        RetrofitInstance.setToken(responseBody.jwt)
+    /** Gọi API lấy thông tin user hiện tại **/
+    private fun getUser() {
+        RetrofitInstance.userService.getUser().enqueue(object : Callback<UserResponse> {
+            override fun onResponse(call: Call<UserResponse>, response: Response<UserResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    onGetUserSuccess(response.body()!!)
+                } else if (response.code() == 401) {
+                    refreshToken()
+                } else {
+                    handleAuthError(response.message())
+                }
+            }
+            override fun onFailure(call: Call<UserResponse>, t: Throwable) {
+                Log.e(TAG, "getUser failure", t)
+            }
+        })
+    }
 
-        getUser()
+    private fun onGetUserSuccess(responseBody: UserResponse) {
+        user = responseBody
+
+        binding.bottomNavigation.selectedItemId = R.id.navigation_home
+
+        loadUserList(null)
     }
 
 
-    private fun loadUserList() {
+    // Gọi API refresh JWT rồi recall getUser()
+    private fun refreshToken() {
+        RetrofitInstance.userService.refreshToken().enqueue(object : Callback<JwtResponse> {
+            override fun onResponse(call: Call<JwtResponse>, response: Response<JwtResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val jwt = response.body()!!.jwt
+                    val expirationTime = System.currentTimeMillis() + response.body()!!.expires_in.toLong() * 1000L
+                    sharedPreferences.edit()
+                        .putString("jwt", jwt)
+                        .putLong("expiration_time", expirationTime)
+                        .apply()
+                    RetrofitInstance.setToken(jwt)
+                    getUser()
+                } else {
+                    handleAuthError("Refresh token failed")
+                }
+            }
+            override fun onFailure(call: Call<JwtResponse>, t: Throwable) {
+                Log.e(TAG, "refreshToken failure", t)
+                handleAuthError("Network error")
+            }
+        })
+    }
+
+
+    private fun handleAuthError(msg: String) {
+        Log.e(TAG, "Auth error: $msg")
+        startActivity(Intent(this, LoginActivity::class.java))
+        finish()
+    }
+
+
+    private fun loadUserList(callback: ((Boolean) -> Unit)?) {
         RetrofitInstance.userService.loadUserList()
             .enqueue(object : Callback<List<UserResponse>> {
                 override fun onResponse(
@@ -120,70 +152,65 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
                     response: Response<List<UserResponse>>
                 ) {
                     if (response.isSuccessful && response.body() != null) {
-                        onLoadUsersSuccess(response.code(), response.body()!!)
+                        userList = response.body()!!
+                        callback?.invoke(true)
                     } else {
-                        generalError(response.code(), Exception("Error loading user list: ${response.message()}"))
+                        callback?.invoke(false)
                     }
                 }
-
                 override fun onFailure(call: Call<List<UserResponse>>, t: Throwable) {
-                    generalError(500, t)
+                    Log.e(TAG, "loadUserList failure", t)
+                    callback?.invoke(false)
                 }
             })
     }
 
-    private fun onLoadUsersSuccess(statusCode: Int, responseBody: List<UserResponse>) {
-        Log.d("USER_LIST", "Successful loadUserList call. $responseBody Status code: $statusCode")
-        replaceFragment(ListPostsFragment.newInstance(user), "LIST_POST_FRAGMENT")
-
-        binding.btnAddFriend.isClickable = true
-        Log.d("USER_LIST", responseBody.toString())
-
-        val fragment: Fragment = FriendFragment.newInstance(responseBody)
-        binding.btnAddFriend.setOnClickListener {
-            addFullscreenFragment(fragment, "ADD_FRIENDS")
-        }
-    }
-
-    private fun loadProfileData(user: UserResponse) {
-        picasso.load(user.profilePicture).placeholder(R.color.primaryAccent).into(binding.btnProfile)
-        binding.btnProfile.isClickable = true
-        binding.btnProfile.setOnClickListener {
-            addFullscreenFragment(ProfileFragment.newInstance(user), "PROFILE_FRAGMENT")
-        }
-    }
-
+    /**
+     * Thay thế Fragment trong container.
+     * Trước khi replace, luôn show lại BottomNavigationView.
+     */
     private fun replaceFragment(fragment: Fragment, tag: String) {
-        Log.d("FRAGMENT", "Adding fragment ${fragment.id} with tag $tag")
-        val fragmentManager = supportFragmentManager
-        val transaction = fragmentManager.beginTransaction()
+        binding.bottomNavigation.visibility = View.VISIBLE
 
-        fragmentManager.fragments.forEach {
-            transaction.hide(it)
+        val tx = supportFragmentManager.beginTransaction()
+        supportFragmentManager.fragments.forEach { tx.hide(it) }
+        supportFragmentManager.findFragmentByTag(tag)?.let {
+            tx.show(it)
+        } ?: run {
+            tx.add(R.id.fragment_container_view, fragment, tag)
         }
-
-        val existingFragment = fragmentManager.findFragmentByTag(tag)
-        if (existingFragment != null) {
-            transaction.show(existingFragment)
-        } else {
-            transaction.add(R.id.fragment_container_view, fragment, tag)
-        }
-
-        transaction.addToBackStack(tag)
-        transaction.commit()
+        tx.commit()
     }
 
-    private fun addFullscreenFragment(fragment: Fragment, tag: String) {
-        binding.toolbar.visibility = View.GONE
-        replaceFragment(fragment, tag)
+
+    /**
+     * Thêm Fragment full-screen (ví dụ: EditProfile), ẩn BottomNavigationView.
+     */
+    fun addFullscreenFragment(fragment: Fragment, tag: String) {
+        binding.bottomNavigation.visibility = View.GONE
+        val tx = supportFragmentManager.beginTransaction()
+        supportFragmentManager.fragments.forEach { tx.hide(it) }
+        supportFragmentManager.findFragmentByTag(tag)?.let {
+            tx.show(it)
+        } ?: run {
+            tx.add(R.id.fragment_container_view, fragment, tag)
+        }
+        tx.addToBackStack(tag)
+        tx.commit()
     }
 
-    private fun generalError(statusCode: Int, e: Throwable) {
-        Log.e("API_CALL_ERROR", "Error $statusCode during API call!")
-        e.printStackTrace()
+    companion object {
+        private const val TAG = "FeedActivity"
+        private const val TAG_HOME = "HOME"
+        private const val TAG_SEARCH = "SEARCH"
+        private const val TAG_CHATS = "CHATS"
+        private const val TAG_NOTIFS = "NOTIFS"
+        private const val TAG_PROFILE = "PROFILE"
     }
 
     override fun updateUserDetails(user: UserResponse) {
-        loadProfileData(user)
+        Log.d("UPDATING_USER_DETAILS", user.toString())
+        this.user = user
     }
+
 }

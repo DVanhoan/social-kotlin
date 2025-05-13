@@ -27,6 +27,4 @@ data class UserResponse(
 
     @Json(name = "registration_date")
     var registration_date: String
-) {
-    var isOutgoing: Boolean = false
-}
+)

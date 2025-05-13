@@ -6,4 +6,5 @@ data class Message(
     val sender_id: Int,
     val conversation_id: Int,
     val message_type: String,
+    val image_url: String? = null,
 )

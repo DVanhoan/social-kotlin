@@ -11,7 +11,7 @@ class Message extends Model
 
     public $timestamps = true;
 
-    protected $fillable = ['content', 'conversation_id', 'sender_id', 'message_type'];
+    protected $fillable = ['content', 'image_url', 'conversation_id', 'sender_id', 'message_type'];
 
     public function conversation()
     {

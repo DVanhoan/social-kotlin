@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ConversationActivity">
+    tools:context=".fragment.ChatFragment">
 
     <LinearLayout
         android:id="@+id/linearSearch"
@@ -17,8 +17,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
-            android:id="@+id/tvInput"
+        <EditText
+            android:id="@+id/etSearch"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -26,12 +26,10 @@
             android:hint="@string/search_conversation"
             android:gravity="center_vertical"
             android:padding="8dp"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="@android:color/black"
             android:textSize="16sp"
-            android:backgroundTint="@color/white"
-            android:clickable="true"
-            android:focusable="true"/>
-
+            android:inputType="text"
+            android:backgroundTint="@color/white" />
 
         <ImageButton
             android:id="@+id/btnSearch"
@@ -41,9 +39,9 @@
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
             android:background="@null"
-            android:contentDescription="Chọn ảnh"
-            android:src="@drawable/search" />
+            android:src="@drawable/ic_baseline_search_24" />
     </LinearLayout>
+
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_conversations"
@@ -55,5 +53,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_conversation" />
+
+
+    <ImageView
+        android:id="@+id/tvCreateConversation"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="8dp"
+        android:background="@drawable/bg_circle_border"
+        android:contentDescription="@string/comment_icon"
+        android:src="@drawable/ic_plus_solid"
+        app:layout_constraintBottom_toBottomOf="@id/recycler_view_conversations"
+        app:layout_constraintEnd_toEndOf="@id/recycler_view_conversations"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="40dp"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

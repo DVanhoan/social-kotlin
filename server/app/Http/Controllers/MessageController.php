@@ -21,22 +21,31 @@ class MessageController extends Controller
             'conversation_id' => 'required|integer',
         ]);
 
-        $messageType = '';
-        $content = '';
+        $content = null;
+        $imageUrl = null;
+        $messageType = null;
 
-
-        if ($request->hasFile('content')) {
-            $file = $request->file('content');
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
             $cloudinaryUpload = Cloudinary::upload($file->getRealPath());
-            $url = $cloudinaryUpload->getSecurePath();
-            $content = $url;
-            $messageType = 'image';
+            $imageUrl = $cloudinaryUpload->getSecurePath();
         }
-        else if ($request->filled('content')) {
+
+        if ($request->filled('content')) {
             $content = $request->input('content');
-            $messageType = 'text';
-        } else {
+        }
+
+        if (!$content && !$imageUrl) {
             return response()->json(['error' => 'Missing message content (text or file)'], 400);
+        }
+
+
+        if ($content && $imageUrl) {
+            $messageType = 'text_image';
+        } else if ($content) {
+            $messageType = 'text';
+        } else if ($imageUrl) {
+            $messageType = 'image';
         }
 
         $message = Message::create([
@@ -44,13 +53,23 @@ class MessageController extends Controller
             'sender_id'       => $user->id,
             'conversation_id' => $request->conversation_id,
             'message_type'    => $messageType,
+            'image_url'       => $imageUrl,
         ]);
+
+        $message->load('sender');
+
+        $payload = [
+            'id'              => $message->id,
+            'isSender'        => true,
+            'sender'          => $message->sender,
+            'content'         => $message->content,
+            'image_url'       => $message->image_url,
+            'conversation_id' => $message->conversation_id,
+            'created_at'      => $message->created_at->format('H:i A')
+        ];
 
         broadcast(new MessageSent($message))->toOthers();
-
-        return response()->json([
-            'status'  => 'success',
-            'message' => $message,
-        ]);
+        Log:info('');
+        return response()->json($payload, 200);
     }
 }

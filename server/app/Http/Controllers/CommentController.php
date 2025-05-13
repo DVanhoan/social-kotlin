@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Models\Comment;
+use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
@@ -19,13 +21,17 @@ class CommentController extends Controller
     {
 
         $data = $request->only(['comment', 'post', 'user_id', 'username']);
+
+        $auth = Auth::guard('api')->user();
+
         $comment = Comment::create([
             'text'         => $data['comment'],
             'post_id'      => $data['post'],
-            'user_id'      => $data['user_id'] ?? null,
-            'username'     => $data['username'] ?? 'Anonymous',
+            'user_id'      => $auth->id,
+            'username'     => $auth->username,
             'comment_time' => now()
         ]);
+
         return response()->json($comment, 201);
     }
 }

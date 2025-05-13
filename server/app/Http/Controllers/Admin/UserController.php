@@ -25,7 +25,7 @@ class UserController extends Controller
     }
 
     public function loginView() {
-        Alert::toast('Please login', 'info');
+        Alert::info('Please login first');
         return view('auth.login');
     }
 
@@ -34,12 +34,11 @@ class UserController extends Controller
         $user = $this->userService->checkLogin($request->email, $request->password);
         if ($user) {
             auth()->login($user);
-            Alert::toast('Login successfully', 'success');
-            Log::info('User login successfully', ['user' => auth()->guard('web')->user()]);
+            Alert::success('Login successfully');
             return redirect(route('admin'));
         }
         else {
-            Alert::toast('Login failed', 'error');
+            Alert::error('Login failed');
             Log::info('Login failed', ['email' => $request->email, 'password' => $request->password]);
             return back();
         }
@@ -66,13 +65,15 @@ class UserController extends Controller
         $user = $this->userService->register($request);
 
         if ($user) {
-            auth()->guard('web')->login($user);
-            Alert::toast('Registration successful', 'success');
+            auth()->login($user);
+            Alert::success('Registration successfully');
             return redirect()->route('admin');
         }
         else {
-            Alert::toast('Registration failed', 'error');
+            Alert::error('Registration failed');
             return back();
         }
     }
+
+
 }

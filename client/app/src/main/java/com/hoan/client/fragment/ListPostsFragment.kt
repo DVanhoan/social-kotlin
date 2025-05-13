@@ -2,52 +2,47 @@ package com.hoan.client.fragment
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.dhaval2404.imagepicker.ImagePicker
 import com.hoan.client.NewPostActivity
 import com.hoan.client.R
 import com.hoan.client.adapter.PostsRecyclerViewAdapter
-import com.hoan.client.adapter.PostsRecyclerViewAdapter.ReactionListener
-import com.hoan.client.adapter.PostsRecyclerViewAdapter.SettingsListener
 import com.hoan.client.constant.Constants
 import com.hoan.client.databinding.FragmentListPostsBinding
 import com.hoan.client.network.RetrofitInstance
 import com.hoan.client.network.response.PostResponse
-import com.hoan.client.network.response.ReactionResponse
 import com.hoan.client.network.response.UserResponse
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.hoan.client.viewmodel.PostsViewModel
+import androidx.activity.result.ActivityResult
 
-class ListPostsFragment(private var user: UserResponse) :
-    Fragment(R.layout.fragment_list_posts),
-    ReactionListener {
+class ListPostsFragment(private val user: UserResponse) : Fragment() {
 
     private var _binding: FragmentListPostsBinding? = null
     private val binding get() = _binding!!
 
+    private val viewModel: PostsViewModel by viewModels()
+    private lateinit var adapter: PostsRecyclerViewAdapter
+
     private lateinit var sharedPreferences: SharedPreferences
     private val sharedPrefName = "user_shared_preference"
-    private lateinit var postsRecyclerViewAdapter: PostsRecyclerViewAdapter
-
     private lateinit var imagePicker: ImagePicker.Builder
-
-    private var reactionOnPostID: Long? = null
-    private var reactionPosition: Int? = null
 
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
@@ -66,15 +61,14 @@ class ListPostsFragment(private var user: UserResponse) :
         }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentListPostsBinding.inflate(inflater, container, false)
 
-        sharedPreferences = requireActivity().getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
-        val token = sharedPreferences.getString("jwt", "") ?: ""
-        RetrofitInstance.setToken(token)
+        sharedPreferences = requireActivity()
+            .getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
+        RetrofitInstance.setToken(sharedPreferences.getString("jwt", "").orEmpty())
+
 
         imagePicker = ImagePicker.with(requireActivity())
             .compress(1024)
@@ -82,21 +76,39 @@ class ListPostsFragment(private var user: UserResponse) :
             .galleryMimeTypes(arrayOf("image/png", "image/jpg", "image/jpeg"))
 
         setupRecyclerView()
-        getAllPosts()
+        setupUiActions()
+        observeViewModel()
+        viewModel.loadPosts()
 
+        return binding.root
+    }
 
-        binding.tvStatus.setOnClickListener {
-            navigateToNewPost(null)
-        }
+    private fun setupRecyclerView() {
+        adapter = PostsRecyclerViewAdapter(
+            currentUserId   = user.id,
+            reactionListener = object : PostsRecyclerViewAdapter.ReactionListener {
+                override fun reaction(postId: Long) {
+                    showReactionPicker(postId)
+                }
+            },
+            settingsListener = object : PostsRecyclerViewAdapter.SettingsListener {
+                override fun onEditPost(post: PostResponse) {
 
+                }
+                override fun onDeletePost(post: PostResponse) {}
+                override fun onReportPost(post: PostResponse) { }
+            }
+        )
+        binding.postsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.postsRecyclerView.adapter = adapter
+    }
 
+    private fun setupUiActions() {
+        binding.tvStatus.setOnClickListener { navigateToNewPost(null) }
         binding.btnImage.setOnClickListener {
-            Toast.makeText(requireContext(), "Chọn ảnh", Toast.LENGTH_SHORT).show()
-
             if (!checkPermissions()) return@setOnClickListener
-
             val options = arrayOf("Chụp ảnh", "Chọn ảnh từ thư viện")
-            android.app.AlertDialog.Builder(requireContext())
+            AlertDialog.Builder(requireContext())
                 .setTitle("Chọn nguồn ảnh")
                 .setItems(options) { _, which ->
                     when (which) {
@@ -106,154 +118,59 @@ class ListPostsFragment(private var user: UserResponse) :
                 }
                 .show()
         }
-
-        return binding.root
     }
 
+    private fun observeViewModel() {
+        viewModel.posts.observe(viewLifecycleOwner, Observer { list ->
+            adapter.submitList(list)
+        })
+        viewModel.error.observe(viewLifecycleOwner, Observer { err ->
+            err?.let { Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show() }
+        })
+    }
+
+    private fun showReactionPicker(postId: Long) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_reaction_picker, null)
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .create()
+
+        val reactionMap = mapOf(
+            R.id.btn_react_like  to "like",
+            R.id.btn_react_love  to "love",
+            R.id.btn_react_haha  to "haha",
+            R.id.btn_react_sad   to "sad",
+            R.id.btn_react_tired to "tired"
+        )
+        reactionMap.forEach { (btnId, reactionType) ->
+            dialogView.findViewById<ImageButton>(btnId).setOnClickListener {
+                dialog.dismiss()
+                viewModel.react(postId, reactionType)
+            }
+        }
+        dialog.show()
+    }
 
     private fun navigateToNewPost(imageUri: String?) {
-        val intent = Intent(requireContext(), NewPostActivity::class.java)
-        imageUri?.let { intent.putExtra("imageUri", it) }
-        startActivity(intent)
-    }
-
-
-    private fun setupRecyclerView() {
-        val layoutManager = LinearLayoutManager(requireContext())
-        binding.postsRecyclerView.layoutManager = layoutManager
-        postsRecyclerViewAdapter = PostsRecyclerViewAdapter(
-            currentUserId = user.id,
-            reactionListener = this,
-            settingsListener = object : SettingsListener {
-                override fun onEditPost(post: PostResponse) {
-                    Log.d("SETTINGS", "Edit post: $post")
-                }
-
-                override fun onDeletePost(post: PostResponse) {
-                    Log.d("SETTINGS", "Delete post: $post")
-                }
-
-                override fun onReportPost(post: PostResponse) {
-                    Log.d("SETTINGS", "Report post: $post")
-                }
-            },
-            activity = requireActivity()
-        )
-        binding.postsRecyclerView.adapter = postsRecyclerViewAdapter
-    }
-
-
-    private fun getAllPosts() {
-        RetrofitInstance.postService.getAllPosts()
-            .enqueue(object : Callback<List<PostResponse>> {
-                override fun onResponse(
-                    call: Call<List<PostResponse>>,
-                    response: Response<List<PostResponse>>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        val list = response.body()!!
-                        Log.d("POSTS", list.toString())
-                        postsRecyclerViewAdapter.setPosts(list)
-                    } else {
-                        showError("Error fetching posts: ${response.message()}")
-                    }
-                }
-
-                override fun onFailure(call: Call<List<PostResponse>>, t: Throwable) {
-                    showError("Error fetching posts: ${t.localizedMessage}")
-                }
-            })
+        val i = Intent(requireContext(), NewPostActivity::class.java)
+        imageUri?.let { i.putExtra("imageUri", it) }
+        startActivity(i)
     }
 
     private fun checkPermissions(): Boolean {
-        val needLocation = ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-        val needCamera = ContextCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.CAMERA
-        )
-        val permissionsToRequest = mutableListOf<String>()
-        if (needLocation != PackageManager.PERMISSION_GRANTED) {
-            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
-        if (needCamera != PackageManager.PERMISSION_GRANTED) {
-            permissionsToRequest.add(Manifest.permission.CAMERA)
-        }
-        return if (permissionsToRequest.isNotEmpty()) {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
-                permissionsToRequest.toTypedArray(),
-                123
-            )
+        val perms = mutableListOf<String>()
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED)
+            perms += Manifest.permission.CAMERA
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED)
+            perms += Manifest.permission.ACCESS_FINE_LOCATION
+
+        return if (perms.isEmpty()) true
+        else {
+            ActivityCompat.requestPermissions(requireActivity(), perms.toTypedArray(), 123)
             false
-        } else true
-    }
-
-    private fun showError(msg: String) {
-        Constants.showErrorSnackbar(requireContext(), layoutInflater, msg)
-    }
-
-    override fun reaction(postId: Long, position: Int) {
-        reactionOnPostID = postId
-        reactionPosition = position
-        val options = arrayOf("Thích", "Yêu thích", "Buồn", "Tức giận", "Ngạc nhiên")
-
-        android.app.AlertDialog.Builder(requireContext())
-            .setTitle("Chọn biểu cảm")
-            .setItems(options) { _, which ->
-                val reaction = when (which) {
-                    0 -> "like"
-                    1 -> "love"
-                    2 -> "sad"
-                    3 -> "angry"
-                    4 -> "surprised"
-                    else -> "like"
-                }
-                react(postId, position, reaction)
-            }
-            .show()
-
-    }
-
-    private fun react(postId: Long, position: Int, reaction: String) {
-        RetrofitInstance.reactionService.react(reaction, postId)
-            .enqueue(object : Callback<ReactionResponse> {
-                override fun onResponse(
-                    call: Call<ReactionResponse>,
-                    response: Response<ReactionResponse>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        postsRecyclerViewAdapter.notifyItemChanged(position + 1)
-                    } else {
-                        showError("Error reacting: ${response.message()}")
-                    }
-                }
-
-                override fun onFailure(call: Call<ReactionResponse>, t: Throwable) {
-                    showError("Error reacting: ${t.localizedMessage}")
-                }
-            })
-        reactionOnPostID = null
-        reactionPosition = null
-    }
-
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        requireActivity().onBackPressedDispatcher.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    if (requireActivity().supportFragmentManager.fragments.size == 1) {
-                        requireActivity().finish()
-                    } else {
-                        requireActivity().supportFragmentManager.popBackStack()
-                    }
-                }
-            }
-        )
+        }
     }
 
     override fun onDestroyView() {

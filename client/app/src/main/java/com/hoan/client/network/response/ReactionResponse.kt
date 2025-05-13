@@ -12,8 +12,8 @@ data class ReactionResponse(
     @Json(name = "post_id")
     var postId: Long,
 
-    @Json(name = "image_name")
-    val imageName: String,
+    @Json(name = "reaction_type")
+    val reaction_type: String,
 
     @Json(name = "reaction_time")
     val reactionTime: String,

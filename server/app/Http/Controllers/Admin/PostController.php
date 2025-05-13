@@ -5,15 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-use Dom\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class PostController extends Controller
 {
     public function index()
     {
-        $posts = Post::withCount('comments')->orderBy('id', 'DESC')->paginate(10);
+        $posts = Post::withCount('comments')->orderBy('id', 'ASC')->paginate(10);
         return view('pages.posts.index', compact('posts'));
     }
 
@@ -49,16 +49,19 @@ class PostController extends Controller
                 'deleted' => false
             ]);
 
-            return redirect()->route('pages.posts.index')->with('success', 'Post created successfully');
+            Alert('success', 'Post created successfully');
+            return redirect()->route('posts');
         } catch (\Exception $e) {
-            Log::error('Post creation failed: ' . $e->getMessage());
+            Alert('error', 'Failed to create post');
             return back()->withInput()->with('error', 'Failed to create post');
         }
     }
 
 
-    public function edit(Post $post)
+    public function edit($postId)
     {
+        $post = Post::findOrFail($postId);
+
         return view('pages.posts.edit', compact('post'));
     }
 
@@ -66,39 +69,49 @@ class PostController extends Controller
     public function update(Request $request, Post $post)
     {
         $validated = $request->validate([
-            'content' => 'required|string|max:2000',
-            'location' => 'nullable|string|max:255',
+            'content'      => 'required|string|max:2000',
+            'location'     => 'nullable|string|max:255',
             'posting_time' => 'nullable|date',
-            'main_photo' => 'sometimes|image|max:5120'
+            'main_photo'   => 'sometimes|image|max:5120'
         ]);
 
         try {
+            // Chuẩn bị dữ liệu update
+            $data = [
+                'content'      => $validated['content'],
+                'location'     => $validated['location'],
+                'posting_time' => $validated['posting_time'] ?? now(),
+            ];
+
+            // Nếu có upload ảnh mới, thêm vào mảng data
             if ($request->hasFile('main_photo')) {
-                $uploadedFile = Cloudinary::upload($request->file('main_photo')->getRealPath());
-                $post->main_photo = $uploadedFile->getSecurePath();
+                $uploadedFile = Cloudinary::upload(
+                    $request->file('main_photo')->getRealPath()
+                );
+                $data['main_photo'] = $uploadedFile->getSecurePath();
             }
 
-            $post->update([
-                'content' => $validated['content'],
-                'location' => $validated['location'],
-                'posting_time' => $validated['posting_time'] ?? $post->posting_time
-            ]);
+            $post->update($data);
 
-            return redirect()->route('pages.posts.index')->with('success', 'Post updated successfully');
+            Alert::success('Success', 'Post updated successfully');
+            return redirect()->route('posts');
         } catch (\Exception $e) {
             Log::error('Post update failed: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Failed to update post');
+            Alert::error('Error', 'Failed to update post');
+            return back()->withInput();
         }
     }
+
 
 
     public function destroy(Post $post)
     {
         try {
             $post->update(['deleted' => true]);
-            return redirect()->route('pages.posts.index')->with('success', 'Post deleted successfully');
+            Alert::success('Success', 'Post deleted successfully');
+            return redirect()->route('posts');
         } catch (\Exception $e) {
-            Log::error('Post deletion failed: ' . $e->getMessage());
+            Alert::error('Error', 'Failed to delete post');
             return back()->with('error', 'Failed to delete post');
         }
     }

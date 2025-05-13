@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Http\Services;
+
 use App\Models\Comment;
 use GuzzleHttp\Psr7\Request;
 

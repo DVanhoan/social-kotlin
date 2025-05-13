@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\FriendRequestSent;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\Friendship;
 use Illuminate\Support\Facades\Auth;
@@ -11,14 +13,31 @@ class FriendshipController extends Controller
 
     public function addFriend($userId, Request $request)
     {
-        $user = Auth::guard('api')->user();
-        $currentUserId = $user->id;
+        $user_sender = Auth::guard('api')->user();
+        $currentUserId = $user_sender->id;
         $friendship = Friendship::create(attributes: [
             'user1_id' => $currentUserId,
             'user2_id' => $userId,
             'status'   => 'pending',
             'since'    => now()
         ]);
+
+        $user_receiving = User::find($userId);
+
+        event(new FriendRequestSent($user_sender, $user_receiving));
+
+        $data = [
+            'message' => 'Gửi lời mời kết bạn cho bạn',
+            'sender_id' => $user_sender->id,
+            'sender_name' => $user_sender->fullName
+        ];
+        $user_receiving->notifications()->create([
+            'type' => 'FriendRequestSent',
+            'data' => json_encode($data),
+            'notifiable_type' => 'App\Models\User',
+            'notifiable_id' => 2,
+        ]);
+
         return response()->json($friendship, 201);
     }
 
@@ -63,6 +82,17 @@ class FriendshipController extends Controller
             ->get();
         return response()->json($pending, 200);
     }
+
+
+    public function getSentRequests()
+    {
+        $user = Auth::guard('api')->user();
+        $sent = Friendship::where('user1_id', $user->id)
+            ->where('status', 'pending')
+            ->get();
+        return response()->json($sent, 200);
+    }
+
 
 
     public function getListOfFriends()

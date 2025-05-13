@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use CommentService;
-use Dom\Comment;
-use Illuminate\Http\Request;
+use App\Http\Services\CommentService;
 
 class CommentController extends Controller
 {
@@ -18,6 +16,7 @@ class CommentController extends Controller
     public function destroy($commentId)
     {
         $this->commentService->delete($commentId);
+        Alert('success', 'Comment deleted successfully');
         return redirect()->back()->with('success', 'Comment deleted successfully');
     }
 }

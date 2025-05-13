@@ -1,10 +1,11 @@
 package com.hoan.client.network.service
 
 import com.hoan.client.network.request.CreateConversationRequest
+import com.hoan.client.network.request.SendMessageRequest
 import com.hoan.client.network.response.ConversationDetailResponse
 import com.hoan.client.network.response.ConversationsResponse
 import com.hoan.client.network.response.CreateConversationResponse
-import com.hoan.client.network.response.SendMessageResponse
+import com.hoan.client.network.response.RecentMessages
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.Body
@@ -22,20 +23,26 @@ interface MessageService  {
 
     @GET("conversation/{conversationId}")
     fun getConversationDetail(
-        @Path("conversationId") conversationId: Int
+        @Path("conversationId") conversationId: Long
     ): Call<ConversationDetailResponse>
 
     @POST("conversation")
     fun createConversation(
-        @Body request: CreateConversationRequest
+        @Body body: Map<String, @JvmSuppressWildcards Any>
     ): Call<CreateConversationResponse>
 
 
     @Multipart
     @POST("message/send")
-    fun sendMessage(
+    fun sendMessageWithTextAndImage(
         @Part("conversation_id") conversationId: RequestBody,
-        @Part("content") content: RequestBody?,
-        @Part file: MultipartBody.Part?
-    ): Call<SendMessageResponse>
+        @Part("content") text: RequestBody,
+        @Part file: MultipartBody.Part
+    ): Call<RecentMessages>
+
+    @POST("message/send")
+    fun sendTextMessage(
+        @Body request: SendMessageRequest
+    ): Call<RecentMessages>
+
 }

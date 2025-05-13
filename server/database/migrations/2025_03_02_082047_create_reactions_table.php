@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('post_id')->constrained('posts')->onDelete('cascade');
-            $table->enum('reaction_type', ['happy', 'sad', 'angry', 'wow', 'haha', 'love'])->default('happy');
+            $table->enum('reaction_type', ['like', 'happy', 'sad', 'tired', 'wow', 'haha', 'love'])->default('happy');
             $table->timestamp('reaction_time')->useCurrent();
             $table->timestamps();
         });

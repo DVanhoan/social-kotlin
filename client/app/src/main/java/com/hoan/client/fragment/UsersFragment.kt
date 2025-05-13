@@ -36,6 +36,8 @@ class UsersFragment(private val userList: List<UserResponse>) : Fragment(R.layou
     private lateinit var sharedPreferences: SharedPreferences
     private val sharedPrefName = "user_shared_preference"
 
+    private val sentRequests = mutableSetOf<Long>()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -60,21 +62,6 @@ class UsersFragment(private val userList: List<UserResponse>) : Fragment(R.layou
         return binding.root
     }
 
-    override fun onResume() {
-        super.onResume()
-        requireActivity().findViewById<View>(R.id.toolbar).visibility = View.GONE
-    }
-
-    override fun onPause() {
-        super.onPause()
-        requireActivity().findViewById<View>(R.id.toolbar).visibility = View.GONE
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        requireActivity().findViewById<View>(R.id.toolbar).visibility = View.VISIBLE
-    }
-
     private fun setupUsersRecyclerView() {
         val llm = LinearLayoutManager(context).apply {
             orientation = LinearLayoutManager.VERTICAL
@@ -85,34 +72,8 @@ class UsersFragment(private val userList: List<UserResponse>) : Fragment(R.layou
         list.layoutManager = llm
         list.adapter = usersRecyclerViewAdapter
 
-
-        val swipeCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean = false
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                usersRecyclerViewAdapter.removeItemAt(viewHolder.adapterPosition)
-                // Nếu cần gọi API xóa bạn bè, thực hiện tại đây
-            }
-
-            override fun onChildDraw(
-                c: android.graphics.Canvas,
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                dX: Float,
-                dY: Float,
-                actionState: Int,
-                isCurrentlyActive: Boolean
-            ) {
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-            }
-        }
-        ItemTouchHelper(swipeCallback).attachToRecyclerView(list)
-
         loadFriendList()
+        loadSentRequests()
     }
 
     private fun setupPendingRecyclerView() {
@@ -169,62 +130,51 @@ class UsersFragment(private val userList: List<UserResponse>) : Fragment(R.layou
         friendships: List<FriendshipResponse>
     ) {
 
-        val incomingIds = friendships
+        val comingIds = friendships
             .filter { it.user2Id == userId }
             .map    { it.user1Id }
-        val outgoingIds = friendships
-            .filter { it.user1Id == userId }
-            .map    { it.user2Id }
 
-
-        incomingIds.forEach { uid ->
+        comingIds.forEach { uid ->
             userList.find { it.id == uid }?.let { user ->
                 pendingRecyclerViewAdapter.add(user)
                 usersRecyclerViewAdapter.remove(user)
             }
         }
 
-
-        outgoingIds.forEach { uid ->
-            userList.find { it.id == uid }?.let { user ->
-                user.isOutgoing = true
-                pendingRecyclerViewAdapter.add(user)
-                usersRecyclerViewAdapter.remove(user)
-            }
-        }
-
-
-        if (incomingIds.isNotEmpty() || outgoingIds.isNotEmpty()) {
+        if (comingIds.isNotEmpty()) {
             binding.friendRequests.visibility = View.VISIBLE
             binding.pendingListRecyclerView.visibility = View.VISIBLE
         }
     }
 
-
-    private fun getUserByUserId(userId: Long, onSuccess: (Int, UserResponse) -> Unit) {
-        RetrofitInstance.userService.getUserByUserId(userId).enqueue(object : Callback<UserResponse> {
-            override fun onResponse(call: Call<UserResponse>, response: Response<UserResponse>) {
+    private fun loadSentRequests() {
+        RetrofitInstance.friendService.getSentRequests().enqueue(object : Callback<List<FriendshipResponse>> {
+            override fun onResponse(call: Call<List<FriendshipResponse>>, response: Response<List<FriendshipResponse>>) {
                 if (response.isSuccessful && response.body() != null) {
-                    onSuccess(response.code(), response.body()!!)
+                    getSentRequestsSuccess(response.code(), response.body()!!)
                 } else {
-                    generalError(response.code(), Exception("Error loading user by userId: ${response.message()}"))
+                    generalError(response.code(), Exception("Error loading sent requests: ${response.message()}"))
                 }
             }
-            override fun onFailure(call: Call<UserResponse>, t: Throwable) {
+            override fun onFailure(call: Call<List<FriendshipResponse>>, t: Throwable) {
                 generalError(500, t)
             }
         })
     }
 
-    private fun getIncomingRequestUsersSuccess(statusCode: Int, responseBody: UserResponse) {
-        Log.d("USER_BY_USERID", "Successfully queried user: $responseBody Status code: $statusCode")
-        pendingRecyclerViewAdapter.add(responseBody)
-        usersRecyclerViewAdapter.remove(responseBody)
-    }
+    private fun getSentRequestsSuccess(
+        statusCode: Int,
+        sentRequests: List<FriendshipResponse>
+    ) {
+        val comingIds = sentRequests
+            .filter { it.user1Id == userId }
+            .map    { it.user2Id }
 
-    private fun getOutgoingRequestUsersSuccess(statusCode: Int, responseBody: UserResponse) {
-        Log.d("USER_BY_USERID", "Successfully queried user: $responseBody Status code: $statusCode")
-        usersRecyclerViewAdapter.remove(responseBody)
+        comingIds.forEach { uid ->
+            userList.find { it.id == uid }?.let { user ->
+                usersRecyclerViewAdapter.addSentRequest(user.id)
+            }
+        }
     }
 
     private fun generalError(statusCode: Int, e: Throwable) {

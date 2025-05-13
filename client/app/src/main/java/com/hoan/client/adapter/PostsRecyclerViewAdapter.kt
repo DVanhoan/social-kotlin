@@ -1,161 +1,115 @@
 package com.hoan.client.adapter
 
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
-import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.hoan.client.R
 import com.hoan.client.databinding.ItemPostBinding
 import com.hoan.client.fragment.CommentsFragment
-import com.hoan.client.network.response.CommentResponse
 import com.hoan.client.network.response.PostResponse
-import com.hoan.client.network.response.UserResponse
 import com.squareup.picasso.Picasso
 
-
 class PostsRecyclerViewAdapter(
-    private var currentUserId: Long,
+    private val currentUserId: Long,
     private val reactionListener: ReactionListener,
-    private val settingsListener: SettingsListener,
-    private val activity: FragmentActivity
-) : RecyclerView.Adapter<PostsRecyclerViewAdapter.PostItemViewHolder>() {
+    private val settingsListener: SettingsListener
+) : ListAdapter<PostResponse, PostsRecyclerViewAdapter.VH>(DIFF_CALLBACK) {
 
-    private val postList = mutableListOf<PostResponse>()
-    private val commentsOnPosts = hashMapOf<Long, List<CommentResponse>>()
-    private val picasso: Picasso by lazy { Picasso.get() }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostItemViewHolder {
-        val binding = ItemPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PostItemViewHolder(binding)
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<PostResponse>() {
+            override fun areItemsTheSame(a: PostResponse, b: PostResponse) = a.id == b.id
+            override fun areContentsTheSame(a: PostResponse, b: PostResponse) = a == b
+        }
     }
 
-    override fun getItemCount(): Int = postList.size
-
-    override fun onBindViewHolder(holder: PostItemViewHolder, position: Int) {
-        holder.bind(postList[position])
-    }
-
-    inner class PostItemViewHolder(private val binding: ItemPostBinding) :
+    inner class VH(private val binding: ItemPostBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(post: PostResponse) {
-            if (post.deleted) {
-                itemView.visibility = View.GONE
-                return
-            }
-
-            val user: UserResponse? = post.user
-
-
-            binding.userDetailInclude.tvUsername.text = user?.username ?: "Unknown"
-
-            picasso.load(user?.profilePicture ?: "https://static2.yan.vn/YanNews/2167221/202102/facebook-cap-nhat-avatar-doi-voi-tai-khoan-khong-su-dung-anh-dai-dien-e4abd14d.jpg")
-                .placeholder(R.color.primaryAccent)
+            binding.userDetailInclude.tvUsername.text = post.user?.username.orEmpty()
+            Picasso.get()
+                .load(post.user?.profilePicture)
+                .placeholder(R.drawable.profile_placeholder)
                 .into(binding.userDetailInclude.civProfilePicture)
 
-
-            picasso.load(post.mainPhoto)
+            Picasso.get()
+                .load(post.mainPhoto)
                 .placeholder(R.color.primaryAccent)
                 .into(binding.mainPhoto.imageHolder)
 
-            val content = post.content ?: ""
-            if (content.isEmpty()) {
+            if (post.content.isNullOrEmpty()) {
                 binding.content.visibility = View.GONE
             } else {
                 binding.content.visibility = View.VISIBLE
-                binding.content.text = content
-            }
-
-            val comments = commentsOnPosts[post.id] ?: emptyList()
-
-            binding.commentIcon.setOnClickListener {
-                showFullscreenCommentsFragment(post, comments)
+                binding.content.text = post.content
             }
 
             binding.userDetailInclude.tvPostTime.text = post.postingTime
 
 
-            binding.reactionIcon.setOnClickListener {
-                reactionListener.reaction(post.id, adapterPosition)
+            binding.commentIcon.setOnClickListener {
+                val activity = binding.root.context as? androidx.fragment.app.FragmentActivity
+                activity?.supportFragmentManager?.let { fm ->
+                    fm.beginTransaction()
+                        .add(R.id.fragment_container_view,
+                            CommentsFragment.newInstance(post),
+                            "COMMENTS_FRAGMENT")
+                        .addToBackStack("COMMENTS_FRAGMENT")
+                        .commit()
+                }
             }
+            binding.commentCount.text = post.commentCount.toString()
+
+
+            val iconRes = when (post.userReaction) {
+                "like"  -> R.drawable.ic_like
+                "love"  -> R.drawable.ic_love
+                "haha"  -> R.drawable.ic_haha
+                "sad"   -> R.drawable.ic_sad
+                "tired" -> R.drawable.ic_tired
+                else    -> R.drawable.ic_face_grin_solid
+            }
+            binding.reactionIcon.setImageResource(iconRes)
+            binding.reactionIcon.setOnClickListener {
+                reactionListener.reaction(post.id)
+            }
+            binding.reactionCount.text = post.reactionCount.toString()
 
 
             binding.userDetailInclude.ibSettings.setOnClickListener { view ->
-                showSettingsMenu(view, post)
-            }
-
-        }
-    }
-
-    fun setPosts(posts: List<PostResponse>) {
-        postList.clear()
-        postList.addAll(posts.sortedByDescending { it.id })
-        notifyDataSetChanged()
-    }
-
-
-    private fun showSettingsMenu(anchorView: View, post: PostResponse) {
-        val popup = PopupMenu(anchorView.context, anchorView)
-        if (post.user?.id == currentUserId) {
-            popup.menuInflater.inflate(R.menu.menu_post_creator, popup.menu)
-        } else {
-            popup.menuInflater.inflate(R.menu.menu_post_viewer, popup.menu)
-        }
-        popup.setOnMenuItemClickListener { menuItem: MenuItem ->
-            when (menuItem.itemId) {
-                R.id.menu_edit_post -> {
-                    settingsListener.onEditPost(post)
+                val popup = PopupMenu(view.context, view)
+                if (post.user?.id == currentUserId) {
+                    popup.menuInflater.inflate(R.menu.menu_post_creator, popup.menu)
+                } else {
+                    popup.menuInflater.inflate(R.menu.menu_post_viewer, popup.menu)
+                }
+                popup.setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        R.id.menu_edit_post   -> settingsListener.onEditPost(post)
+                        R.id.menu_delete_post -> settingsListener.onDeletePost(post)
+                        R.id.menu_report_post -> settingsListener.onReportPost(post)
+                    }
                     true
                 }
-                R.id.menu_delete_post -> {
-                    settingsListener.onDeletePost(post)
-                    true
-                }
-                R.id.menu_report_post -> {
-                    settingsListener.onReportPost(post)
-                    true
-                }
-                else -> false
+                popup.show()
             }
-        }
-        popup.show()
-    }
-
-
-    private fun showFullscreenCommentsFragment(
-        post: PostResponse,
-        comments: List<CommentResponse>,
-    ) {
-        activity.findViewById<View>(R.id.toolbar)?.visibility = View.GONE
-        val fragment = CommentsFragment.newInstance(post, comments)
-
-        (activity as? FragmentActivity)?.supportFragmentManager?.let { fm ->
-            val transaction = fm.beginTransaction()
-            val feedFragment = fm.findFragmentByTag("LIST_POST_FRAGMENT")
-            if (feedFragment != null) {
-                transaction.hide(feedFragment)
-            }
-            transaction.add(R.id.fragment_container_view, fragment, "COMMENTS_FRAGMENT")
-            transaction.addToBackStack("COMMENTS_FRAGMENT")
-            transaction.commit()
         }
     }
 
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        VH(ItemPostBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 
-
-    fun addComments(postId: Long, comments: List<CommentResponse>) {
-        commentsOnPosts[postId] = comments
-        val index = postList.indexOfFirst { it.id == postId }
-        if (index >= 0) notifyItemChanged(index)
+    override fun onBindViewHolder(holder: VH, position: Int) {
+        holder.bind(getItem(position))
     }
 
     interface ReactionListener {
-        fun reaction(postId: Long, position: Int)
+        fun reaction(postId: Long)
     }
-
     interface SettingsListener {
         fun onEditPost(post: PostResponse)
         fun onDeletePost(post: PostResponse)

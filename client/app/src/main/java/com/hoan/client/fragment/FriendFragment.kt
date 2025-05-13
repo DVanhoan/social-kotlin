@@ -25,11 +25,6 @@ class FriendFragment(private val userList: List<UserResponse>) : Fragment(R.layo
             .replace(R.id.friend_fragment_container, UsersFragment.newInstance(userList))
             .commit()
 
-        binding.backButton.setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
-            requireActivity().findViewById<View>(R.id.toolbar).visibility = View.VISIBLE
-        }
-
         binding.myFriendsButton.setOnClickListener {
             binding.addFriendsButton.setBackgroundResource(R.drawable.underline_dark)
             binding.myFriendsButton.setBackgroundResource(R.drawable.underline_thick)

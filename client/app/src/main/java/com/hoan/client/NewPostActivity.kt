@@ -2,6 +2,7 @@ package com.hoan.client
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -150,8 +151,9 @@ class NewPostActivity : AppCompatActivity() {
             override fun onResponse(call: Call<PostResponse>, response: Response<PostResponse>) {
                 if (response.isSuccessful && response.body() != null) {
                     Toast.makeText(this@NewPostActivity, "Đăng bài thành công!", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@NewPostActivity, FeedActivity::class.java)
+                    startActivity(intent)
                     finish()
-
                 } else {
                     Log.e("NewPostActivity", "Error creating post: ${response.message()}")
                     Constants.showErrorSnackbar(

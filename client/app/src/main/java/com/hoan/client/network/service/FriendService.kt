@@ -20,4 +20,7 @@ interface FriendService {
 
     @GET("friendlist/friends")
     fun getListOfFriends(): Call<List<Long>>
+
+    @GET("friendlist/sent")
+    fun getSentRequests(): Call<List<FriendshipResponse>>
 }

@@ -37,12 +37,6 @@ class ProfileFragment(
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentProfileBinding.inflate(inflater, container, false)
 
-        binding.backButton.setOnClickListener {
-            Log.d("BACK_ARROW", "Click")
-            parentFragmentManager.popBackStack()
-            requireActivity().findViewById<View>(R.id.toolbar).visibility = View.VISIBLE
-        }
-
         binding.editButton.setOnClickListener {
             val listPostsFragment = requireActivity().supportFragmentManager.findFragmentByTag("LIST_POST_FRAGMENT")
             val listeners = mutableListOf<EditProfileFragment.EditedUserListener>()
@@ -69,16 +63,6 @@ class ProfileFragment(
 
         rebuildView()
         return binding.root
-    }
-
-    override fun onResume() {
-        super.onResume()
-        requireActivity().findViewById<View>(R.id.toolbar).visibility = View.GONE
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        requireActivity().findViewById<View>(R.id.toolbar).visibility = View.VISIBLE
     }
 
     private fun replaceFragment(fragment: Fragment) {

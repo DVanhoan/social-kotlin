@@ -18,19 +18,21 @@ class ReactionController extends Controller
 
     public function react(Request $request)
     {
-        $request->validate([
-            'post_id'    => 'required|integer',
-            'reaction' => 'required|string|in:happy,sad,angry,wow,haha,love'
+        $data = $request->validate([
+            'post_id'  => 'required|exists:posts,id',
+            'reaction' => 'required|string|in:like,sad,tired,wow,haha,love',
         ]);
 
         $user = auth()->user();
 
         $reaction = Reaction::create([
             'user_id'       => $user->id,
-            'post_id'       => $request->input('post_id'),
-            'reaction_type' => $request->input('reaction'),
+            'post_id'       => $data['post_id'],
+            'reaction_type' => $data['reaction'],
             'reaction_time' => now()
         ]);
+
+        $reaction->load('user');
 
         return response()->json($reaction, 201);
     }
