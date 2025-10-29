@@ -125,6 +125,10 @@ class NewPostActivity : AppCompatActivity() {
     }
 
     private fun createPost() {
+        binding.ivPostButton.visibility = View.INVISIBLE
+        binding.progressSending.visibility = View.VISIBLE
+
+
         val content = binding.etPostContent.text.toString().trim()
 
         if (content.isEmpty() && selectedImageUri == null) {
@@ -149,6 +153,9 @@ class NewPostActivity : AppCompatActivity() {
             locationBody,
         ).enqueue(object : Callback<PostResponse> {
             override fun onResponse(call: Call<PostResponse>, response: Response<PostResponse>) {
+                binding.ivPostButton.visibility = View.VISIBLE
+                binding.progressSending.visibility = View.GONE
+
                 if (response.isSuccessful && response.body() != null) {
                     Toast.makeText(this@NewPostActivity, "Đăng bài thành công!", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this@NewPostActivity, FeedActivity::class.java)
@@ -165,6 +172,8 @@ class NewPostActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<PostResponse>, t: Throwable) {
+                binding.ivPostButton.visibility = View.VISIBLE
+                binding.progressSending.visibility = View.GONE
                 Constants.showErrorSnackbar(
                     this@NewPostActivity,
                     layoutInflater,

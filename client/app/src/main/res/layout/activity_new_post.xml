@@ -46,6 +46,14 @@
             android:layout_height="wrap_content"
             android:contentDescription="@string/add"
             android:src="@drawable/ic_check_solid" />
+
+        <ProgressBar
+            android:id="@+id/progress_sending"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:visibility="gone"/>
     </LinearLayout>
 
     <ScrollView
@@ -88,8 +96,6 @@
                 android:layout_marginTop="16dp"
                 android:scaleType="fitCenter"
                 android:visibility="gone" />
-
-
 
 
             <LinearLayout

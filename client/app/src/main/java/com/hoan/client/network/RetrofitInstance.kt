@@ -37,7 +37,7 @@ object RetrofitInstance {
 
     private val retrofit: Retrofit = Retrofit.Builder()
         .client(client)
-        .baseUrl("http://192.168.1.9:8000/api/v1/")
+        .baseUrl("http://192.168.1.6:8000/api/v1/")
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 

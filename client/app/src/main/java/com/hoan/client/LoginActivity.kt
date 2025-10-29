@@ -5,8 +5,10 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
@@ -87,7 +89,7 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.isEnabled = isUsernameCorrect && isPasswordCorrect
         binding.btnLogin.isClickable = binding.btnLogin.isEnabled
         val tintColor = if (binding.btnLogin.isEnabled)
-            ContextCompat.getColor(this, R.color.primary)
+            ContextCompat.getColor(this, R.color.green)
         else
             ContextCompat.getColor(this, R.color.light_grey)
         binding.btnLogin.background.setTint(tintColor)
@@ -96,6 +98,10 @@ class LoginActivity : AppCompatActivity() {
     private fun login(usernameOrEmail: String, password: String) {
         (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
             .hideSoftInputFromWindow(binding.btnLogin.windowToken, 0)
+
+        binding.progressLogin.visibility = View.VISIBLE
+        binding.btnLogin.isEnabled = false
+        binding.btnLogin.alpha = 0.5f
 
         val jwtRequest = JwtRequest(usernameOrEmail, password)
         val call: Call<JwtResponse> = RetrofitInstance.userService.login(jwtRequest)
@@ -109,6 +115,9 @@ class LoginActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<JwtResponse>, t: Throwable) {
+                binding.progressLogin.visibility = View.GONE
+                binding.btnLogin.isEnabled = true
+                binding.btnLogin.alpha = 1.0f
                 loginError(500, t)
             }
         })

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Models\Reaction;
 use Illuminate\Http\Request;
 use App\Models\Comment;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,6 @@ class CommentController extends Controller
 
     public function comment(Request $request)
     {
-
         $data = $request->only(['comment', 'post', 'user_id', 'username']);
 
         $auth = Auth::guard('api')->user();

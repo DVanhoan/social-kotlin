@@ -34,22 +34,6 @@ class PostController extends Controller
     }
 
 
-//    public function getAllPosts()
-//    {
-//        $posts = Post::with('user')
-//        ->where('deleted', false)
-//            ->orderBy('posting_time', 'desc')
-//            ->get();
-//
-//        if ($posts->isEmpty()) {
-//            return response()->json([
-//                'message' => 'No posts found',
-//            ]);
-//        }
-//        return response()->json($posts, 200);
-//    }
-
-
     public function getAllPosts()
     {
         $userId = auth()->id();

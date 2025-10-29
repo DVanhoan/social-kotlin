@@ -18,6 +18,9 @@ data class ReactionResponse(
     @Json(name = "reaction_time")
     val reactionTime: String,
 
+    @Json(name = "reaction_count")
+    val reaction_count: Int,
+
     @Json(name = "user")
     var user: UserResponse?
 )

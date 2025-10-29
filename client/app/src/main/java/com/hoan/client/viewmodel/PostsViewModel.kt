@@ -64,7 +64,7 @@ class PostsViewModel : ViewModel() {
                             val old = currentPosts[idx]
                             val updated = old.copy(
                                 userReaction  = reactionType,
-                                reactionCount = old.reactionCount + 1
+                                reactionCount = response.body()?.reaction_count ?: old.reactionCount,
                             )
                             currentPosts[idx] = updated
                             _posts.value = currentPosts.toList()

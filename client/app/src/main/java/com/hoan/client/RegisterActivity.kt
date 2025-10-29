@@ -2,6 +2,8 @@ package com.hoan.client
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -99,12 +101,20 @@ class RegisterActivity : AppCompatActivity() {
             isUsernameCorrect && isPasswordCorrect && isFullNameCorrect && isEmailCorrect
 
         if (binding.btnRegister.isEnabled)
-            binding.btnRegister.background.setTint(ContextCompat.getColor(baseContext, R.color.primary))
+            binding.btnRegister.background.setTint(ContextCompat.getColor(baseContext, R.color.green))
         else
             binding.btnRegister.background.setTint(ContextCompat.getColor(baseContext, R.color.light_grey))
     }
 
     private fun register(registerRequest: RegisterRequest) {
+        (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
+            .hideSoftInputFromWindow(binding.btnRegister.windowToken, 0)
+
+        binding.progressRegister.visibility = View.VISIBLE
+        binding.btnRegister.isEnabled = false
+        binding.btnRegister.alpha = 0.5f
+
+
         val call: Call<UserResponse> = RetrofitInstance.userService.register(registerRequest)
         call.enqueue(object : Callback<UserResponse> {
             override fun onResponse(call: Call<UserResponse>, response: Response<UserResponse>) {
@@ -116,6 +126,9 @@ class RegisterActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<UserResponse>, t: Throwable) {
+                binding.progressRegister.visibility = View.GONE
+                binding.btnRegister.isEnabled = true
+                binding.btnRegister.alpha = 1.0f
                 registrationError(500, t)
             }
         })

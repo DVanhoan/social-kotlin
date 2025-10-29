@@ -36,11 +36,9 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
 
         sharedPreferences = getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
         RetrofitInstance.setToken(sharedPreferences.getString("jwt", "") ?: "")
+        getUser()
 
         setupBottomNavigation()
-
-
-        getUser()
     }
 
 
@@ -85,7 +83,7 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
     }
 
 
-    /** Gọi API lấy thông tin user hiện tại **/
+
     private fun getUser() {
         RetrofitInstance.userService.getUser().enqueue(object : Callback<UserResponse> {
             override fun onResponse(call: Call<UserResponse>, response: Response<UserResponse>) {
@@ -183,9 +181,6 @@ class FeedActivity : AppCompatActivity(), EditProfileFragment.EditedUserListener
     }
 
 
-    /**
-     * Thêm Fragment full-screen (ví dụ: EditProfile), ẩn BottomNavigationView.
-     */
     fun addFullscreenFragment(fragment: Fragment, tag: String) {
         binding.bottomNavigation.visibility = View.GONE
         val tx = supportFragmentManager.beginTransaction()

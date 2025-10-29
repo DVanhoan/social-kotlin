@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
 use Illuminate\Http\Request;
 use App\Models\Reaction;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
@@ -25,16 +26,33 @@ class ReactionController extends Controller
 
         $user = auth()->user();
 
-        $reaction = Reaction::create([
-            'user_id'       => $user->id,
-            'post_id'       => $data['post_id'],
-            'reaction_type' => $data['reaction'],
-            'reaction_time' => now()
-        ]);
+
+        $reaction = Reaction::where('user_id', $user->id)
+            ->where('post_id', $data['post_id'])
+            ->first();
+
+
+        if ($reaction) {
+            $reaction->update([
+                'reaction_type' => $data['reaction'],
+                'reaction_time' => now()
+            ]);
+        } else {
+            $reaction = Reaction::create([
+                'user_id'       => $user->id,
+                'post_id'       => $data['post_id'],
+                'reaction_type' => $data['reaction'],
+                'reaction_time' => now()
+            ]);
+        }
 
         $reaction->load('user');
 
-        return response()->json($reaction, 201);
+        $reactionCount = Reaction::where('post_id', $data['post_id'])->count();
+        $reaction->reaction_count = $reactionCount;
+
+        return response()->json($reaction, 200);
     }
+
 
 }
