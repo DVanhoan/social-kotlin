@@ -117,12 +117,31 @@ client/
 
 ## UI Screenshots
 
-- Login/Registration screen
-- News Feed
-- Profile view
-- Chat interface
-- Post creation
-- Friend list view
+![Login](docs/screenshots/login.png)
+
+-
+
+![Registration screen](docs/screenshots/register.png)
+
+-
+
+![News Feed](docs/screenshots/home.png)
+
+-
+
+![Post creation](docs/screenshots/createPost.png)
+
+-
+
+![Profile view](docs/screenshots/profile.png)
+
+-
+
+![Chat interface](docs/screenshots/chat.png)
+
+-
+
+![Friend list view](docs/screenshots/friends.png)
 
 ## Getting Started
 
